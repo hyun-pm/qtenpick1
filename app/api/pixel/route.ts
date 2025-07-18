@@ -1,4 +1,3 @@
-// app/api/pixel/route.ts
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -7,33 +6,30 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
+  const body = await req.json();
+  const { pixelPrompt, outfit, style, makeup } = body;
+
   try {
-    const body = await req.json();
-    const prompt = body?.pixelPrompt;
-
-    if (!prompt) {
-      return NextResponse.json({ error: "Missing pixelPrompt" }, { status: 400 });
-    }
-
-    // 📌 문자열 그대로 사용해서 프롬프트 구성
-    const actualPrompt = `
-      pixel art style full-body avatar of a stylish Korean woman.
-      ${prompt}
-      Minimal background, clean pixel style.
-    `.replace(/\s+/g, " ").trim();
+    const fullPrompt = pixelPrompt && pixelPrompt.length > 10
+      ? pixelPrompt
+      : `
+        A full-body pixel art avatar of a young woman in cute, detailed pixel style. 
+        Wearing ${outfit.outer}, ${outfit.top}, and ${outfit.bottom} in a ${style} fashion style. 
+        She wears ${outfit.shoes} and accessories like ${outfit.accessory}. 
+        Her makeup includes ${makeup.foundation}, ${makeup.eyeshadow}, ${makeup.lip}, and ${makeup.blusher}. 
+        Please draw her in charming Korean pixel-art style with big shiny eyes and soft hair.
+        White background. 32-bit dot pixel style.`;
 
     const res = await openai.images.generate({
-      prompt: actualPrompt,
+      model: "dall-e-3",
+      prompt: fullPrompt,
       n: 1,
-      size: "512x512",
+      size: "1024x1024",
       response_format: "b64_json",
     });
 
     const b64 = res.data?.[0]?.b64_json;
-
-    if (!b64) {
-      return NextResponse.json({ error: "No image returned from OpenAI" }, { status: 500 });
-    }
+    if (!b64) throw new Error("Image generation failed");
 
     return NextResponse.json({ image: `data:image/png;base64,${b64}` });
   } catch (e: any) {
