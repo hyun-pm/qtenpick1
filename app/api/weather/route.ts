@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const key = process.env.OPENWEATHER_API_KEY;
 
   if (!key) {
-    return NextResponse.json({ error: "Missing API key" }, { status: 500 });
+    return NextResponse.json({ error: "Missing OPENWEATHER_API_KEY" }, { status: 500 });
   }
 
   try {
@@ -15,19 +15,20 @@ export async function GET(req: Request) {
       `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${key}`
     );
 
+    const text = await res.text();
+
     if (!res.ok) {
-      const msg = await res.text();
-      return NextResponse.json({ error: "Weather API failed", detail: msg }, { status: 500 });
+      return NextResponse.json({ error: "Weather API failed", detail: text }, { status: 500 });
     }
 
-    const data = await res.json();
+    const data = JSON.parse(text);
 
     return NextResponse.json({
       temp: data.main.temp,
       description: data.weather[0].description,
-      hourly: [], // One Call 아닌 현재 날씨 API에는 없음
+      hourly: [],
     });
   } catch (e) {
-    return NextResponse.json({ error: "Unexpected weather API error" }, { status: 500 });
+    return NextResponse.json({ error: "Unexpected server error", detail: (e as any).message }, { status: 500 });
   }
 }
