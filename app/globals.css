@@ -2,11 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-white text-gray-900;
-  font-family: 'Noto Sans KR', sans-serif;
+@font-face {
+  font-family: 'Galmuri';
+  src: url('/fonts/Galmuri11.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
 }
 
-h1, h2 {
-  @apply font-bold;
+html {
+  font-family: 'Galmuri', sans-serif;
 }
