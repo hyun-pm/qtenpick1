@@ -8,39 +8,48 @@ export default function Page() {
   const [rec, setRec] = useState<any>(null);
   const [img, setImg] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     refresh();
   }, []);
 
   async function refresh() {
-    setLoading(true);
+    try {
+      setLoading(true);
+      setError(null);
 
-    const w = await fetch("/api/weather").then((r) => r.json());
-    setWeather(w);
+      const w = await fetch("/api/weather").then((r) => r.json());
+      if (w.error) throw new Error(w.error);
+      setWeather(w);
 
-    const r = await fetch("/api/recommend", {
-      method: "POST",
-      body: JSON.stringify({ weather: w }),
-    }).then((r) => r.json());
-    setRec(r);
+      const r = await fetch("/api/recommend", {
+        method: "POST",
+        body: JSON.stringify({ weather: w }),
+      }).then((r) => r.json());
+      if (r.error) throw new Error(r.error);
+      setRec(r);
 
-    const im = await fetch("/api/pixel", {
-      method: "POST",
-      body: JSON.stringify({ pixelPrompt: r.pixelPrompt }),
-    }).then((r) => r.json());
-    setImg(im.imageUrl);
-
-    setLoading(false);
+      const im = await fetch("/api/pixel", {
+        method: "POST",
+        body: JSON.stringify({ pixelPrompt: r.pixelPrompt }),
+      }).then((r) => r.json());
+      if (im.error) throw new Error(im.error);
+      setImg(im.imageUrl);
+    } catch (e: any) {
+      setError(e.message || "알 수 없는 오류 발생");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const outfitItems: React.ReactNode[] = rec
+  const outfitItems: React.ReactNode[] = rec?.outfit
     ? (Object.entries(rec.outfit) as [string, string][]).map(([k, v]) => (
         <li key={k}>{k}: {v}</li>
       ))
     : [];
 
-  const makeupItems: React.ReactNode[] = rec
+  const makeupItems: React.ReactNode[] = rec?.makeup
     ? (Object.entries(rec.makeup) as [string, string][]).map(([k, v]) => (
         <li key={k}>{k}: {v}</li>
       ))
@@ -49,6 +58,7 @@ export default function Page() {
   return (
     <main className="p-4 font-mono">
       {loading && <RefreshLoader />}
+      {!loading && error && <p className="text-red-500">⚠️ {error}</p>}
       {!loading && rec && (
         <>
           <h1 className="text-xl">오늘의 스타일: {rec.style}</h1>
