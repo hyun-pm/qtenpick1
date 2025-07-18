@@ -43,20 +43,16 @@ export default function Page() {
 
           <h2 className="mt-2">👕 착장</h2>
           <ul>
-            {Object.entries(rec.outfit).map(([k, v]) => (
-              <li key={k}>
-                {k}: {v}
-              </li>
-            )) as React.ReactNode}
+            {(Object.entries(rec.outfit).map(([k, v]) => (
+              <li key={k}>{k}: {v}</li>
+            ))) as React.ReactNode}
           </ul>
 
           <h2 className="mt-2">💄 메이크업</h2>
           <ul>
-            {Object.entries(rec.makeup).map(([k, v]) => (
-              <li key={k}>
-                {k}: {v}
-              </li>
-            )) as React.ReactNode}
+            {(Object.entries(rec.makeup).map(([k, v]) => (
+              <li key={k}>{k}: {v}</li>
+            ))) as React.ReactNode}
           </ul>
 
           <button onClick={refresh} className="mt-4 p-2 bg-pink-400">
