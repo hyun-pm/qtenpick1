@@ -1,108 +1,99 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import RefreshLoader from '../components/RefreshLoader';
-
-type Outfit = Record<string, string>;
-type Makeup = Record<string, string>;
+import Image from 'next/image';
+import './globals.css'; // Tailwind + 폰트 로드
+import pixelButton from '/public/button-pixel.png'; // 버튼 이미지 예시
+import sunIcon from '/public/sunny-pixel.png'; // 날씨 아이콘 예시
 
 export default function Home() {
   const [weather, setWeather] = useState<any>(null);
-  const [rec, setRec] = useState<{
-    style: string;
-    outfit: Outfit;
-    makeup: Makeup;
-    pixelPrompt: string;
-  } | null>(null);
-  const [img, setImg] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-
-  const refresh = async () => {
-    setLoading(true);
-    try {
-      const w = await fetch('/api/weather').then((r) => r.json());
-      setWeather(w);
-
-      const r = await fetch('/api/recommend', {
-        method: 'POST',
-        body: JSON.stringify({ weather: w }),
-      }).then((r) => r.json());
-      setRec(r);
-
-      const i = await fetch('/api/pixel', {
-        method: 'POST',
-        body: JSON.stringify({ pixelPrompt: r.pixelPrompt }),
-      }).then((r) => r.json());
-      setImg(i.image);
-    } catch (err) {
-      console.error('오류 발생:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [rec, setRec] = useState<any>(null);
+  const [img, setImg] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     refresh();
   }, []);
 
+  const refresh = async () => {
+    setLoading(true);
+    const w = await fetch('/api/weather').then(r => r.json());
+    setWeather(w);
+    const r = await fetch('/api/recommend', {
+      method: 'POST',
+      body: JSON.stringify({ weather: w }),
+    }).then(r => r.json());
+    setRec(r);
+    const im = await fetch('/api/pixel', {
+      method: 'POST',
+      body: JSON.stringify({ pixelPrompt: r.pixelPrompt }),
+    }).then(r => r.json());
+    setImg(im.image);
+    setLoading(false);
+  };
+
   return (
-    <main className="min-h-screen bg-pink-50 px-6 py-10 font-['DungGeunMo'] text-gray-800">
-      {loading && <RefreshLoader />}
-      {!loading && rec && (
-        <div className="max-w-3xl mx-auto flex flex-col items-center">
-          <h1 className="text-3xl font-bold mb-6 text-pink-600">
-            오늘의 스타일: <span className="text-black">"{rec.style}"</span>
-          </h1>
+    <main className="min-h-screen bg-pink-50 font-galmuri text-gray-800 p-6">
+      <div className="max-w-xl mx-auto text-center">
+        <h1 className="text-3xl text-pink-600 font-bold">오늘의 스타일: <span className="text-black">"{rec?.style}"</span></h1>
 
-          <div className="flex flex-col md:flex-row gap-8 items-center w-full">
-            <div className="w-60">
-              <img src={img} alt="픽셀 아바타" className="w-full h-auto rounded border border-pink-300" />
-            </div>
-
-            <div className="text-center md:text-left">
-              <div className="text-lg mb-2">
-                🌤️ 현재 날씨: <b>{weather?.description}</b>, {weather?.temp}°C
-              </div>
-              <div className="mt-4">
-                <h2 className="text-xl font-semibold text-pink-500">👕 착장</h2>
-                <ul className="mt-1 text-sm leading-6">
-                  {Object.entries(rec.outfit as Outfit).map(([k, v]) => (
-                    <li key={k}><b>{k}</b>: {v}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-4">
-                <h2 className="text-xl font-semibold text-pink-500">💄 메이크업</h2>
-                <ul className="mt-1 text-sm leading-6">
-                  {Object.entries(rec.makeup as Makeup).map(([k, v]) => (
-                    <li key={k}><b>{k}</b>: {v}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+        {weather && (
+          <div className="mt-2 text-sm flex justify-center items-center gap-2">
+            <Image src={sunIcon} alt="sun" width={24} height={24} />
+            <span>현재 날씨: {weather.description}, {weather.temp}°C</span>
           </div>
+        )}
 
-          {/* 추천 아이템 영역 */}
-          <div className="mt-8 w-full">
-            <h2 className="text-lg font-semibold mb-2">🛍 관련 상품</h2>
-            <div className="flex gap-4 justify-center flex-wrap">
-              {[1, 2, 3].map((_, i) => (
-                <div key={i} className="w-24">
-                  <div className="w-full h-24 bg-gray-200 rounded border border-pink-300" />
-                  <p className="text-xs mt-1 text-center">상품명</p>
+        {img && (
+          <div className="flex justify-center mt-6">
+            <Image
+              src={img}
+              alt="픽셀 아바타"
+              width={200}
+              height={200}
+              className="rounded-lg border-2 border-pink-300"
+            />
+          </div>
+        )}
+
+        {rec && (
+          <>
+            <div className="mt-8 text-left">
+              <h2 className="text-xl text-pink-600 font-bold flex items-center gap-1">👕 착장</h2>
+              <ul className="mt-2 ml-2 text-sm leading-6">
+                {Object.entries(rec.outfit).map(([k, v]) => (
+                  <li key={k}><b>{k}:</b> {v}</li>
+                ))}
+              </ul>
+
+              <h2 className="text-xl text-pink-600 font-bold flex items-center gap-1 mt-4">💄 메이크업</h2>
+              <ul className="mt-2 ml-2 text-sm leading-6">
+                {Object.entries(rec.makeup).map(([k, v]) => (
+                  <li key={k}><b>{k}:</b> {v}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 관련 상품 placeholder */}
+            <h2 className="text-lg font-semibold mt-6 text-left ml-2">🛍️ 관련 상품</h2>
+            <div className="flex justify-center gap-3 mt-2">
+              {['상품명', '상품명', '상품명'].map((name, i) => (
+                <div key={i} className="bg-white rounded-xl border shadow-md w-[90px] h-[100px] flex flex-col justify-center items-center text-xs text-gray-600">
+                  <div className="w-[60px] h-[60px] bg-gray-200 rounded mb-1" />
+                  {name}
                 </div>
               ))}
             </div>
-          </div>
+          </>
+        )}
 
-          <button
-            onClick={refresh}
-            className="mt-10 px-6 py-2 bg-pink-500 text-white font-semibold rounded-full border-2 border-pink-600 shadow hover:bg-pink-600 transition"
-          >
-            다시 추천받기
+        <div className="flex justify-center mt-8">
+          <button onClick={refresh}>
+            <Image src={pixelButton} alt="다시 추천받기" width={150} height={45} />
           </button>
         </div>
-      )}
+      </div>
     </main>
   );
 }
