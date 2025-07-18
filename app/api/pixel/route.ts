@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { pixelPrompt } = await req.json();
   if (!pixelPrompt) {
-    return NextResponse.json({ error: "No prompt provided" }, { status: 400 });
+    return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
   }
 
   try {
@@ -30,6 +30,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ imageUrl });
   } catch (e) {
-    return NextResponse.json({ error: "DALL·E API error" }, { status: 500 });
+    return NextResponse.json({ error: "Image generation error" }, { status: 500 });
   }
 }
