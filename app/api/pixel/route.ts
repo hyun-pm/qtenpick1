@@ -1,35 +1,24 @@
-import { NextResponse } from "next/server";
+// app/api/pixel/route.ts
+import { OpenAIApi, Configuration } from "openai";
+
+const config = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+const client = new OpenAIApi(config);
 
 export async function POST(req: Request) {
-  const { pixelPrompt } = await req.json();
-  if (!pixelPrompt) {
-    return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
-  }
-
-  try {
-    const res = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt: `8-bit pixel art avatar, ${pixelPrompt}, front-facing, white background`,
-        n: 1,
-        size: "512x512",
-      }),
-    });
-
-    const data = await res.json();
-    const imageUrl = data?.data?.[0]?.url;
-
-    if (!imageUrl) {
-      return NextResponse.json({ error: "No image generated" }, { status: 500 });
-    }
-
-    return NextResponse.json({ imageUrl });
-  } catch (e) {
-    return NextResponse.json({ error: "Image generation error" }, { status: 500 });
-  }
+  const body = await req.json();
+  const prompt = body?.pixelPrompt;
+  const actualPrompt =
+    prompt && prompt.length > 10
+      ? prompt
+      : `pixel style avatar of a person wearing ${
+          body.outfit.top
+        } and ${body.outfit.bottom} in ${body.style} fashion`;
+  const res = await client.createImage({
+    prompt: actualPrompt,
+    n: 1,
+    size: "256x256",
+    response_format: "b64_json",
+  });
+  const b64 = res.data.data[0].b64_json;
+  return new Response(JSON.stringify({ image: `data:image/png;base64,${b64}` }));
 }
