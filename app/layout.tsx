@@ -4,7 +4,6 @@ export const metadata = {
   title: "QtenPick",
   description: "날씨 기반 픽셀 코디 추천 서비스",
 };
-
 export default function RootLayout({
   children,
 }: {
