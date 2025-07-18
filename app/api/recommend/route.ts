@@ -10,6 +10,7 @@ export async function POST(req: Request) {
   try {
     const { weather } = await req.json();
     const prompt = createLookPrompt(weather);
+
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is null" }, { status: 400 });
     }
@@ -19,14 +20,23 @@ export async function POST(req: Request) {
       messages: [{ role: "user", content: prompt }],
     });
 
-    const content = res.choices[0]?.message?.content;
+    const content = res.choices?.[0]?.message?.content;
     if (!content) {
-      return NextResponse.json({ error: "No GPT content" }, { status: 500 });
+      return NextResponse.json({ error: "No GPT content returned" }, { status: 500 });
     }
 
-    const json = JSON.parse(content);
+    let json;
+    try {
+      json = JSON.parse(content);
+    } catch (err) {
+      return NextResponse.json({ error: "Invalid JSON from GPT", raw: content }, { status: 500 });
+    }
+
     return NextResponse.json(json);
   } catch (error) {
-    return NextResponse.json({ error: "GPT API error", detail: (error as any).message }, { status: 500 });
+    return NextResponse.json(
+      { error: "GPT API Error", detail: (error as any).message },
+      { status: 500 }
+    );
   }
 }
