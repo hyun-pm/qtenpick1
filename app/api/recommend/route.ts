@@ -14,6 +14,6 @@ export async function POST(req: Request) {
     messages: [{ role: "user", content: prompt as string }],
   });
 
-  const json = JSON.parse(res.choices[0].message.content);
+  const json = JSON.parse(res.choices[0].message.content as string); // ← 여기!
   return NextResponse.json(json);
 }
