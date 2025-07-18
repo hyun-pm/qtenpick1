@@ -37,7 +37,7 @@ export default function Page() {
       if (im.error) throw new Error(im.error);
       setImg(im.imageUrl);
     } catch (e: any) {
-      setError(e.message || "알 수 없는 오류 발생");
+      setError(e.message || "알 수 없는 오류");
     } finally {
       setLoading(false);
     }
