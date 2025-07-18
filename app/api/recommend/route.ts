@@ -27,7 +27,7 @@ recommend a Korean street style outfit and matching makeup. Output in this JSON 
     "blusher": "string",
     "highlighter": "string"
   },
-  "pixelPrompt": "이 outfit과 makeup을 기반으로 한 픽셀 여자 캐릭터의 외형 설명"
+  "pixelPrompt": "픽셀 여성 캐릭터 생성을 위한 영어 프롬프트. 옷/메이크업 포함 설명 문장 1~2줄"
 }`;
 
   try {
@@ -36,7 +36,10 @@ recommend a Korean street style outfit and matching makeup. Output in this JSON 
       messages: [{ role: "user", content: prompt }],
     });
 
-    const json = JSON.parse(res.choices[0].message.content || "{}");
+    const raw = res.choices[0].message.content || "";
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+    const json = JSON.parse(cleaned);
+
     return NextResponse.json(json);
   } catch (e: any) {
     return NextResponse.json({ error: "GPT API Error", detail: e.message }, { status: 500 });
