@@ -22,15 +22,12 @@ export async function POST(req: Request) {
 
     const content = res.choices[0]?.message?.content;
     if (!content) {
-      return NextResponse.json({ error: "No content from GPT" }, { status: 500 });
+      return NextResponse.json({ error: "No GPT response" }, { status: 500 });
     }
 
     const json = JSON.parse(content);
     return NextResponse.json(json);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal Server Error", detail: (error as any).message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "GPT API Error", detail: (error as any).message }, { status: 500 });
   }
 }
