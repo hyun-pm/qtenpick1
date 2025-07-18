@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const key = process.env.OPENWEATHER_API_KEY;
 
   if (!key) {
-    return NextResponse.json({ error: "Missing API Key" }, { status: 500 });
+    return NextResponse.json({ error: "Missing API key" }, { status: 500 });
   }
 
   try {
@@ -27,6 +27,6 @@ export async function GET(req: Request) {
       hourly: data.hourly.slice(0, 12).map((h: any) => h.temp),
     });
   } catch (e) {
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
