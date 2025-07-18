@@ -25,9 +25,9 @@ export async function GET(req: Request) {
     return NextResponse.json({
       temp: data.main.temp,
       description: data.weather[0].description,
-      hourly: [], // OneCall이 아니라서 비워둡니다
+      hourly: [], // One Call 아닌 현재 날씨 API에는 없음
     });
   } catch (e) {
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return NextResponse.json({ error: "Unexpected weather API error" }, { status: 500 });
   }
 }
