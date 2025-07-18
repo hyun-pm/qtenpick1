@@ -1,9 +1,10 @@
-// app/layout.tsx
-import React from "react";
+import './globals.css';
+
 export const metadata = {
-  title: "QtenPick",
-  description: "날씨 기반 픽셀 코디 추천 서비스",
+  title: 'QtenPick',
+  description: '날씨 기반 픽셀 코디 추천 서비스',
 };
+
 export default function RootLayout({
   children,
 }: {
