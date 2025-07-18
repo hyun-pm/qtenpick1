@@ -35,11 +35,15 @@ export default function Page() {
   }
 
   const outfitItems: React.ReactNode[] = rec
-    ? Object.entries(rec.outfit).map(([k, v]) => <li key={k}>{k}: {v}</li>)
+    ? (Object.entries(rec.outfit) as [string, string][]).map(([k, v]) => (
+        <li key={k}>{k}: {v}</li>
+      ))
     : [];
 
   const makeupItems: React.ReactNode[] = rec
-    ? Object.entries(rec.makeup).map(([k, v]) => <li key={k}>{k}: {v}</li>)
+    ? (Object.entries(rec.makeup) as [string, string][]).map(([k, v]) => (
+        <li key={k}>{k}: {v}</li>
+      ))
     : [];
 
   return (
