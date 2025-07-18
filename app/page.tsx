@@ -53,7 +53,7 @@ export default function Home() {
           <ul>
             {Object.entries(rec.outfit).map(([k, v]) => (
               <li key={k}>
-                {k}: {v}
+                {k}: {String(v)}
               </li>
             ))}
           </ul>
@@ -61,7 +61,7 @@ export default function Home() {
           <ul>
             {Object.entries(rec.makeup).map(([k, v]) => (
               <li key={k}>
-                {k}: {v}
+                {k}: {String(v)}
               </li>
             ))}
           </ul>
