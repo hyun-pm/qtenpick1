@@ -1,32 +1,33 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
+  const key = process.env.OPENWEATHER_API_KEY;
   const url = new URL(req.url);
   const lat = url.searchParams.get("lat") || "37.5665";
   const lon = url.searchParams.get("lon") || "126.9780";
-  const key = process.env.OPENWEATHER_API_KEY;
 
   if (!key) {
-    return NextResponse.json({ error: "Missing OPENWEATHER_API_KEY" }, { status: 500 });
+    return NextResponse.json({ error: "Missing API key" }, { status: 500 });
   }
 
   try {
     const res = await fetch(
-      `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=metric&exclude=minutely,alerts&appid=${key}`
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${key}`
     );
 
     if (!res.ok) {
-      return NextResponse.json({ error: "Weather API error" }, { status: 500 });
+      const err = await res.text();
+      return NextResponse.json({ error: "Weather API error", detail: err }, { status: 500 });
     }
 
     const data = await res.json();
 
     return NextResponse.json({
-      temp: data.current.temp,
-      description: data.current.weather[0].description,
-      hourly: data.hourly.slice(0, 12).map((h: any) => h.temp),
+      temp: data.main.temp,
+      description: data.weather[0].description,
+      hourly: [], // One Call이 아니라서 없음
     });
   } catch (e) {
-    return NextResponse.json({ error: "Internal weather API failure" }, { status: 500 });
+    return NextResponse.json({ error: "Weather fetch failed" }, { status: 500 });
   }
 }
