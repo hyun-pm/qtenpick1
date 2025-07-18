@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-white text-gray-900;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+h1, h2 {
+  @apply font-bold;
+}
