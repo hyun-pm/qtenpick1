@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from "react";
 import { RefreshLoader } from "../components/RefreshLoader";
+import React from "react";
 
 export default function Page() {
   const [weather, setWeather] = useState<any>(null);
@@ -33,6 +34,14 @@ export default function Page() {
     setLoading(false);
   }
 
+  const outfitItems: React.ReactNode[] = rec
+    ? Object.entries(rec.outfit).map(([k, v]) => <li key={k}>{k}: {v}</li>)
+    : [];
+
+  const makeupItems: React.ReactNode[] = rec
+    ? Object.entries(rec.makeup).map(([k, v]) => <li key={k}>{k}: {v}</li>)
+    : [];
+
   return (
     <main className="p-4 font-mono">
       {loading && <RefreshLoader />}
@@ -42,22 +51,10 @@ export default function Page() {
           <img src={img} alt="픽셀 아바타" />
 
           <h2 className="mt-2">👕 착장</h2>
-          <ul>
-            {
-              Object.entries(rec.outfit).map(([k, v]) => (
-                <li key={k}>{k}: {v}</li>
-              )) as unknown as React.ReactNode[]
-            }
-          </ul>
+          <ul>{outfitItems}</ul>
 
           <h2 className="mt-2">💄 메이크업</h2>
-          <ul>
-            {
-              Object.entries(rec.makeup).map(([k, v]) => (
-                <li key={k}>{k}: {v}</li>
-              )) as unknown as React.ReactNode[]
-            }
-          </ul>
+          <ul>{makeupItems}</ul>
 
           <button onClick={refresh} className="mt-4 p-2 bg-pink-400">
             다시 추천받기
