@@ -21,21 +21,33 @@ export async function POST(req: Request) {
     });
 
     const content = res.choices?.[0]?.message?.content;
+
     if (!content) {
-      return NextResponse.json({ error: "No GPT content returned" }, { status: 500 });
+      return NextResponse.json({
+        error: "No content returned by GPT",
+        rawResponse: JSON.stringify(res),
+      }, { status: 500 });
     }
 
     let json;
     try {
       json = JSON.parse(content);
     } catch (err) {
-      return NextResponse.json({ error: "Invalid JSON from GPT", raw: content }, { status: 500 });
+      return NextResponse.json({
+        error: "GPT returned invalid JSON",
+        raw: content,
+      }, { status: 500 });
     }
 
     return NextResponse.json(json);
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: "GPT API Error", detail: (error as any).message },
+      {
+        error: "GPT API Error",
+        message: error.message,
+        code: error.code,
+        full: JSON.stringify(error),
+      },
       { status: 500 }
     );
   }
