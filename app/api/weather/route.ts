@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
-  const key = process.env.OPENWEATHER_API_KEY;
   const url = new URL(req.url);
   const lat = url.searchParams.get("lat") || "37.5665";
   const lon = url.searchParams.get("lon") || "126.9780";
+  const key = process.env.OPENWEATHER_API_KEY;
 
   if (!key) {
     return NextResponse.json({ error: "Missing API key" }, { status: 500 });
@@ -16,8 +16,8 @@ export async function GET(req: Request) {
     );
 
     if (!res.ok) {
-      const err = await res.text();
-      return NextResponse.json({ error: "Weather API error", detail: err }, { status: 500 });
+      const msg = await res.text();
+      return NextResponse.json({ error: "Weather API failed", detail: msg }, { status: 500 });
     }
 
     const data = await res.json();
@@ -25,9 +25,9 @@ export async function GET(req: Request) {
     return NextResponse.json({
       temp: data.main.temp,
       description: data.weather[0].description,
-      hourly: [], // One Call이 아니라서 없음
+      hourly: [], // OneCall이 아니라서 비워둡니다
     });
   } catch (e) {
-    return NextResponse.json({ error: "Weather fetch failed" }, { status: 500 });
+    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
 }
