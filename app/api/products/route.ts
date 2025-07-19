@@ -13,7 +13,9 @@ export async function POST(req: Request) {
   const searchUrl = `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(keyword)}`;
 
   try {
-    const executablePath = await chromium.executablePath;
+    // ✅ 안전하게 fallback 처리 포함
+    const executablePath =
+      (await chromium.executablePath) || '/usr/bin/chromium-browser';
 
     const browser = await puppeteer.launch({
       args: chromium.args,
