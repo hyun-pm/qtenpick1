@@ -8,13 +8,13 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { temp, style, weatherMain, description } = body;
 
-    if (!temp || !weatherMain || !description || !style) {
-      return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    if (!temp || !style || !weatherMain || !description) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const gptPrompt = `
-날씨: ${description}, 기온: ${temp}도, 스타일: ${style}.
-이 조건에 어울리는 여성용 착장과 메이크업을 창의적으로 구성하고, 아래 형식의 JSON으로 응답해.
+오늘 날씨는 ${description}이고 기온은 ${temp}도입니다. 스타일은 ${style}입니다.
+이 조건에 어울리는 여성용 착장과 메이크업을 창의적으로 구성하고 아래 JSON 형식으로 정확히 응답해주세요.
 
 {
   "style": "스타일명",
@@ -34,8 +34,9 @@ export async function POST(req: Request) {
     "blusher": "...",
     "highlighter": "..."
   },
-  "pixelPrompt": "pixel art style full-body avatar of a stylish young woman wearing ${상의}, ${하의}, ${액세서리}, in ${style} fashion with ${메이크업 정보들}. pastel tone. soft lighting. no background. 8-bit sprite"
-}`;
+  "pixelPrompt": "pixel art style full-body avatar of a stylish young woman wearing (상의), (하의), (액세서리), in (style) fashion. makeup includes (eyeshadow, lip, blusher, foundation). no background. 8-bit sprite. soft pastel tone."
+}
+    `;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -44,10 +45,13 @@ export async function POST(req: Request) {
     });
 
     const text = completion.choices[0].message.content;
-    const data = JSON.parse(text || "{}");
+    const parsed = JSON.parse(text || "{}");
 
-    return NextResponse.json(data);
-  } catch (e) {
-    return NextResponse.json({ error: "GPT API Error", detail: (e as any).message }, { status: 500 });
+    return NextResponse.json(parsed);
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: "GPT API Error", detail: error.message },
+      { status: 500 }
+    );
   }
 }
