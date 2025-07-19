@@ -18,9 +18,19 @@ export async function POST(req: Request) {
       response_format: "b64_json"
     });
 
-    const image = response.data[0]?.b64_json;
+    const data = response.data;
+
+    if (!data || data.length === 0 || !data[0].b64_json) {
+      return NextResponse.json({ error: "No image data received from OpenAI" }, { status: 500 });
+    }
+
+    const image = data[0].b64_json;
+
     return NextResponse.json({ image: `data:image/png;base64,${image}` });
-  } catch (e) {
-    return NextResponse.json({ error: "Pixel API Error", detail: (e as any).message }, { status: 500 });
+  } catch (e: any) {
+    return NextResponse.json(
+      { error: "Pixel API Error", detail: e.message },
+      { status: 500 }
+    );
   }
 }
