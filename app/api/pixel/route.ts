@@ -12,9 +12,10 @@ export async function POST(req: Request) {
     }
 
     const response = await openai.images.generate({
+      model: "dall-e-3", // ✅ 고품질 픽셀 이미지 생성을 위해 DALL·E 3 사용 (명시)
       prompt: pixelPrompt,
       n: 1,
-      size: "1024x1024",
+      size: "1024x1024", // 정사각형 이미지, 잘림 최소화
       response_format: "b64_json"
     });
 
