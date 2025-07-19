@@ -12,20 +12,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ 프롬프트 최적화: products 제거, keywords만 GPT가 생성
+    // ✅ 프롬프트 수정: 일본어 키워드 생성 유도
     const gptPrompt = `
-너는 센스 있는 여성 패션 코디네이터야.
-- 오늘 날씨는 "${description}", 기온은 ${temp}도야.
-- 이 조건에 어울리는 스타일 이름(style), 착장(outfit), 메이크업(makeup), 그리고 Qoo10 검색용 키워드 배열(keywords)을 추천해줘.
+あなたはセンスのある日本の女性向けファッションコーディネーターです。
+- 今日の天気は「${description}」、気温は${temp}度です。
+- この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで検索に使えるキーワード配列(keywords)を提案してください。
 
-[응답 조건]
-- 반드시 유효한 JSON 객체 하나만 응답해. 설명이나 문장은 절대 포함하지 마.
-- 모든 항목은 쌍따옴표("")로 감싸고, 마지막 항목 뒤에 쉼표 넣지 마.
-- 키워드는 간결하게 5~10자 이내로, 최대 5개까지만 생성해.
-- 의미 없는 단어, 광고형 문장, 특수문자 없이 실제 검색 가능한 단어만 사용해.
+[出力条件]
+- 有効なJSONオブジェクト1つだけを応答してください。説明や文章は禁止。
+- すべてのキーと値はダブルクォーテーションで囲んでください。
+- 最後の要素の後にカンマを入れないでください。
+- キーワードは必ず**日本語**で、5〜10文字以内で最大5個まで生成してください。
+- 存在しない単語、広告文、特殊文字を含めないこと。
+- 例：「ブラウス」「スカート」「スニーカー」「リップ」「カーディガン」
 
-[응답 예시]
-{"style":"러블리","outfit":{"top":"화이트 블라우스","bottom":"플로럴 스커트","shoes":"메리제인 구두","accessory":"리본 머리핀","outer":"라이트 카디건"},"makeup":{"foundation":"촉촉 쿠션","blusher":"핑크 블러셔","lip":"틴트 립","eyeshadow":"코랄 섀도우","highlighter":"하이라이터"},"keywords":["블라우스","스커트","틴트"]}
+[JSON出力例]
+{"style":"ガーリー","outfit":{"top":"白ブラウス","bottom":"花柄スカート","shoes":"パンプス","accessory":"リボンヘアピン","outer":"カーディガン"},"makeup":{"foundation":"ツヤ肌クッション","blusher":"ピンクチーク","lip":"ティントリップ","eyeshadow":"コーラルシャドウ","highlighter":"ハイライト"},"keywords":["ブラウス","スカート","リップ"]}
     `.trim();
 
     const completion = await openai.chat.completions.create({
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
     ].filter(Boolean).join(", ");
 
     const pixelPrompt = `
-pastel pixel art of a full-body front-facing cute Korean girl character in ${style} style.
+pastel pixel art of a full-body front-facing cute Japanese girl character in ${style} style.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
 Centered, chibi proportions, soft outlines.
@@ -84,7 +86,7 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       outfit,
       makeup,
       pixelPrompt,
-      products: [], // GPT가 생성 안 하므로 비어 있도록 유지
+      products: [], // GPT가 생성 안 하므로 비워둠
       keywords: Array.isArray(keywords) ? keywords : []
     });
 
