@@ -19,18 +19,19 @@ export async function POST(req: Request) {
 
     // ✅ 최신 Qoo10 구조에 맞는 유연한 선택자
     $('a.item_img').each((_, el) => {
-      const name = $(el).attr('title')?.trim() || '';
+      const name = $(el).attr('title')?.trim() ||
+                   $(el).find('img').attr('alt')?.trim() || '';
       const href = $(el).attr('href') || '';
       const url = href.startsWith('http') ? href : `https://www.qoo10.jp${href}`;
       const thumb = $(el).find('img').attr('src') || '';
 
-      // ⚠️ 유효한 썸네일만
+      // ⚠️ 유효한 썸네일과 상품명
       if (name && url && thumb && !thumb.includes('blank')) {
         items.push({ name, url, thumbnail: thumb });
       }
     });
 
-    console.log('크롤링된 상품 수:', items.length);
+    console.log(`크롤링된 상품 수: ${items.length}개 (검색어: ${keywords[0]})`);
     return NextResponse.json({ items });
   } catch (err: any) {
     console.error('크롤링 에러:', err);
