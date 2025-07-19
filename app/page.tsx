@@ -20,12 +20,10 @@ export default function Home() {
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
 
-      // GPT 추천 요청 (style 생략 → GPT가 자동 생성)
+      // GPT 추천 요청
       const recommendRes = await fetch('/api/recommend', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           temp: weatherData.temp,
           weatherMain: weatherData.main,
@@ -42,9 +40,7 @@ export default function Home() {
       // 픽셀 캐릭터 이미지 생성
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }),
       });
 
@@ -71,7 +67,8 @@ export default function Home() {
 
   const getWeatherIcon = (main: string) => {
     const safeMain = main || 'Clear';
-    return `/icons/${safeMain}.png`;
+    const iconName = safeMain.charAt(0).toUpperCase() + safeMain.slice(1).toLowerCase();
+    return `/icons/${iconName}.png`;
   };
 
   return (
