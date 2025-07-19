@@ -13,36 +13,38 @@ export async function POST(req: Request) {
     }
 
     const gptPrompt = `
-너는 패션 코디네이터야. 오늘 날씨는 ${description}이며 기온은 ${temp}도야. 사용자는 ${style} 스타일을 원해.
-이 조건에 맞는 창의적이고 다양성 있는 여성 착장과 메이크업을 추천해줘.
+너는 전문적인 여성 패션 스타일 추천 코디네이터야.
+- 오늘 날씨는 "${description}"이며, 기온은 ${temp}도야.
+- 사용자가 원하는 스타일은 "${style}"이야.
+- 이 조건에 어울리는 여성용 착장과 메이크업을 구성해줘.
 
-- JSON 형식으로 정확히 응답해
-- 각 항목은 비어 있거나 누락되면 안돼
-- 착장은 outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}, top, bottom, shoes, accessory는 반드시 포함
-- 메이크업은 필요한 항목만 포함 (예: shading, blusher, highlighter는 조건에 따라 생략 가능)
-- 반드시 JSON으로만 응답해야 함
-- 마지막 pixelPrompt는 추천된 top, bottom, accessory, style, makeup 값을 포함해서 작성해야 함
+규칙:
+- 반드시 JSON 형식으로 응답해. 설명 없이 JSON만 출력해.
+- 각 필드는 비어있거나 생략되면 안돼. (단, outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"})
+- makeup은 필요한 항목만 포함하되, 빠지면 안 돼.
+- 마지막 pixelPrompt는 추천된 outfit과 makeup 정보를 바탕으로 구성해.
+- pixelPrompt에는 top, bottom, accessory, style, 메이크업을 자연스럽게 반영할 것.
 
-응답 형식:
+반드시 아래 형식으로 응답해:
 {
-  "style": "스타일명",
+  "style": "",
   "outfit": {
-    "outer": "...",
-    "top": "...",
-    "bottom": "...",
-    "shoes": "...",
-    "accessory": "..."
+    "outer": "",
+    "top": "",
+    "bottom": "",
+    "shoes": "",
+    "accessory": ""
   },
   "makeup": {
-    "sunscreen": "...",
-    "foundation": "...",
-    "eyeshadow": "...",
-    "lip": "...",
-    "shading": "...",
-    "blusher": "...",
-    "highlighter": "..."
+    "sunscreen": "",
+    "foundation": "",
+    "eyeshadow": "",
+    "lip": "",
+    "shading": "",
+    "blusher": "",
+    "highlighter": ""
   },
-  "pixelPrompt": "pixel art style full-body avatar of a stylish young woman wearing white blouse, beige slacks, gold earrings in lovely fashion. makeup includes brown eyeshadow, pink lip, light blusher. pastel tone. no background. 8-bit sprite."
+  "pixelPrompt": ""
 }
     `;
 
@@ -53,9 +55,8 @@ export async function POST(req: Request) {
     });
 
     const text = completion.choices[0].message.content ?? "";
-
-    // JSON 문자열 추출 시 안전하게 파싱
     const jsonMatch = text.match(/\{[\s\S]*\}/);
+
     if (!jsonMatch) {
       return NextResponse.json({ error: "GPT returned invalid JSON", raw: text }, { status: 400 });
     }
