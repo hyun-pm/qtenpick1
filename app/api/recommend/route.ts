@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트 수정: keywords 항목 추가 포함
+    // ✅ GPT 프롬프트 강화: JSON only + 한 줄로 출력
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
 - 오늘 날씨는 "${description}", 기온은 ${temp}도야.
@@ -20,11 +20,10 @@ export async function POST(req: Request) {
 - 그리고 상품 추천과 착장을 기반으로 Qoo10에서 검색할 만한 키워드 배열도 포함해줘.
 
 [조건]
-- JSON 형식으로만 응답해. 설명은 절대 하지 마.
-- 모든 필드는 반드시 채워야 해.
-- outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}.
-- makeup 항목은 최소 4개 이상 포함.
-- 아래 구조로 응답해:
+- 반드시 JSON.stringify()된 JSON 형태로만 응답해.
+- 설명, 줄바꿈, 주석 없이 한 줄로만 출력해.
+- 키와 값은 쌍따옴표("")로 감싸고, 전체는 { 로 시작해서 } 로 끝나야 해.
+- 아래 구조를 따라줘:
 
 {
   "style": "러블리",
@@ -51,12 +50,12 @@ export async function POST(req: Request) {
   ],
   "keywords": ["플로럴 스커트", "틴트 립", "리본 머리핀"]
 }
-`;
+    `.trim();
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: gptPrompt }],
-      temperature: 1.3
+      temperature: 1.3,
     });
 
     const text = completion.choices[0].message.content ?? "";
@@ -65,7 +64,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "GPT returned invalid JSON", raw: text }, { status: 400 });
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (err: any) {
+      return NextResponse.json({
+        error: "GPT JSON Parse Error",
+        raw: jsonMatch[0],
+        detail: err.message
+      }, { status: 400 });
+    }
+
     const { style, outfit, makeup, products, keywords } = parsed;
 
     if (!style || !outfit || !makeup || !Array.isArray(products) || products.length === 0) {
