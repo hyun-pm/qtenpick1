@@ -34,7 +34,6 @@ export default function Home() {
         throw new Error('pixelPrompt 누락 - GPT 응답 오류');
       }
 
-      // ✅ Qoo10 상품 추천 추가 요청
       if (Array.isArray(recommendData.keywords) && recommendData.keywords.length > 0) {
         const productsRes = await fetch('/api/products', {
           method: 'POST',
@@ -43,12 +42,9 @@ export default function Home() {
         });
 
         const productsData = await productsRes.json();
-
-        // ✅ 수정된 부분: products가 undefined인 경우도 안전하게 처리
         recommendData.products = Array.isArray(productsData?.items) ? productsData.items : [];
       }
 
-      // ✅ 픽셀 이미지 요청
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,8 +57,6 @@ export default function Home() {
       }
 
       setPixel(pixelData.image);
-
-      // ✅ 모든 로직 끝난 뒤에 최종적으로 추천 결과 저장
       setRec(recommendData);
     } catch (err: any) {
       console.error(err);
@@ -92,12 +86,7 @@ export default function Home() {
 
       {weather && (
         <div className="flex items-center gap-2 mb-4">
-          <Image
-            src={getWeatherIcon(weather.main)}
-            alt="날씨 아이콘"
-            width={40}
-            height={40}
-          />
+          <Image src={getWeatherIcon(weather.main)} alt="날씨 아이콘" width={40} height={40} />
           <span className="text-sm text-gray-800">
             {weather.description} / {weather.temp}°C
           </span>
@@ -112,13 +101,7 @@ export default function Home() {
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
-        <img
-          src={pixel}
-          alt="추천 캐릭터"
-          width={240}
-          height={240}
-          className="mb-4 rounded"
-        />
+        <img src={pixel} alt="추천 캐릭터" width={240} height={240} className="mb-4 rounded" />
       )}
 
       {rec && (
@@ -147,45 +130,29 @@ export default function Home() {
         </div>
       )}
 
-      {/* 🛍️ Qoo10 추천 상품 리스트 */}
-      {rec?.products && rec.products.length > 0 && (
+      {/* ✅ 추가된 Qoo10 검색 키워드 링크 블록 */}
+      {rec?.keywords && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
-          <h3 className="font-semibold text-pink-600 mb-2">🛍️ 추천 상품</h3>
-          <div className="grid grid-cols-2 gap-4">
-            {rec.products.map((item: any, index: number) => (
-              <a
-                key={index}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center text-center hover:opacity-80"
-              >
-                <img
-                  src={
-                    item.thumbnail && item.thumbnail.startsWith('http')
-                      ? item.thumbnail
-                      : '/icons/fallback.png'
-                  }
-                  alt={item.name}
-                  className="w-24 h-24 object-cover rounded shadow"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/icons/fallback.png';
-                  }}
-                />
-                <span className="mt-2 text-xs text-gray-800">{item.name}</span>
-              </a>
+          <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10 관련 상품 검색</h3>
+          <ul className="list-disc ml-4">
+            {rec.keywords.map((kw: string, idx: number) => (
+              <li key={idx}>
+                <a
+                  href={`https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(kw)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  「{kw}」 をQoo10で探す
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 
       <button onClick={refresh} className="mt-4">
-        <Image
-          src="/icons/button.png"
-          alt="다시 추천받기"
-          width={120}
-          height={40}
-        />
+        <Image src="/icons/button.png" alt="다시 추천받기" width={120} height={40} />
       </button>
     </main>
   );
