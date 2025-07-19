@@ -130,10 +130,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ 추가된 Qoo10 검색 키워드 링크 블록 */}
+      {/* ✅ Qoo10 키워드 검색 링크 블록 */}
       {rec?.keywords && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
-          <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10 관련 상품 검색</h3>
+          <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
           <ul className="list-disc ml-4">
             {rec.keywords.map((kw: string, idx: number) => (
               <li key={idx}>
