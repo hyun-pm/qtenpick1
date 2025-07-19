@@ -89,4 +89,3 @@ Inspired by MapleStory avatars and You.and.d pixel art.
     );
   }
 }
-}
