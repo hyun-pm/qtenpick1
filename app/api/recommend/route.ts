@@ -12,10 +12,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ 1. 스타일 + 착장 + 메이크업 추천 프롬프트
+    // 1. GPT에게 스타일 / 착장 / 메이크업 추천 요청
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
-- 오늘 날씨는 "${description}", 기온은 ${temp}도야.
+- 현재 날씨는 "${description}", 기온은 ${temp}도야.
 - 이 조건에 어울리는 스타일 이름(style), 착장(outfit), 메이크업(makeup)을 구성해줘.
 
 [조건]
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 - outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}.
 - makeup 항목은 최소 4개 이상 포함할 것.
 
-[응답 형식 예시]
+[응답 형식]
 {
   "style": "스타일명",
   "outfit": {
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     "highlighter": "..."
   }
 }
-`;
+    `;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
 
     const text = completion.choices[0].message.content ?? "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
+
     if (!jsonMatch) {
       return NextResponse.json({ error: "GPT returned invalid JSON", raw: text }, { status: 400 });
     }
@@ -65,14 +66,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
     }
 
-    // ✅ 2. 픽셀 이미지 생성을 위한 prompt 구성
-    const outfitList = [
-      outfit.top,
-      outfit.bottom,
-      outfit.shoes,
-      outfit.accessory,
-      outfit.outer,
-    ]
+    // 2. 픽셀 이미지 프롬프트 생성
+    const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean)
       .join(", ");
 
@@ -81,28 +76,26 @@ export async function POST(req: Request) {
       makeup.lip,
       makeup.blusher,
       makeup.foundation,
-      makeup.highlighter,
+      makeup.highlighter
     ]
       .filter(Boolean)
       .join(", ");
 
     const pixelPrompt = `
-high-resolution pixel art of a front-facing full-body Korean girl character.
+high-resolution pixel art of a full-body front-facing cute Korean girl character in ${style} fashion.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
-Style: ${style} fashion.
+Centered composition, chibi proportions, soft outlines, lovely and modern styling.
 
-Chibi proportions, cute and trendy daily outfit.
-Lovely and detailed 8-bit sprite, no background, soft color palette.
-
+8-bit sprite with no background. Soft pastel color palette.
 Inspired by MapleStory avatars and You.and.d OOTD pixel art collection.
-`.trim();
+    `.trim();
 
     return NextResponse.json({
       style,
       outfit,
       makeup,
-      pixelPrompt,
+      pixelPrompt
     });
 
   } catch (error: any) {
