@@ -1,11 +1,7 @@
-// app/api/recommend/route.ts
-
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
@@ -17,43 +13,49 @@ export async function POST(req: Request) {
     }
 
     const gptPrompt = `
-현재 날씨는 "${description}"이고 기온은 ${temp}도입니다. 오늘의 스타일 키워드는 "${style}"입니다.
+오늘 날씨는 ${description}이고 기온은 ${temp}도입니다. 스타일은 ${style}입니다.
+아래 조건에 맞는 착장과 메이크업을 자유롭게 구성해주세요.
+모든 항목은 실제로 존재할 법한 여성 캐릭터 기반이며, 날씨와 계절에 따라 아우터는 생략해도 되고, 메이크업 항목도 상황에 따라 빠질 수 있습니다.
 
-이 정보를 바탕으로 아래 조건에 따라 여성 캐릭터에 어울리는 착장(outfit)과 메이크업(makeup)을 창의적이고 현실감 있게 추천해주세요:
+아래 JSON 형식으로만 응답해주세요:
 
-- 20도 이상일 경우 아우터(outer)는 생략해도 됩니다.
-- 해당 날씨에서 불필요한 메이크업 항목(예: highlighter, blusher 등)은 생략 가능합니다.
-- 착장과 메이크업 결과는 실제로 존재할 수 있는 현실적인 조합으로 구성해주세요.
-- 결과는 **정확히 아래 JSON 형식으로** 응답해주세요.
-
-JSON 형식 예시:
 {
-  "style": "러블리",
+  "style": "스타일명",
   "outfit": {
-    "top": "핑크 셔링 블라우스",
-    "bottom": "화이트 플레어 스커트",
-    "shoes": "베이지 플랫슈즈",
-    "accessory": "진주 귀걸이"
+    "outer": "생략 가능",
+    "top": "...",
+    "bottom": "...",
+    "shoes": "...",
+    "accessory": "..."
   },
   "makeup": {
-    "sunscreen": "SPF50+ 선크림",
-    "foundation": "가벼운 파운데이션",
-    "eyeshadow": "핑크 베이지 섀도우",
-    "lip": "코랄 틴트",
-    "blusher": "은은한 핑크 블러셔"
+    "sunscreen": "...",
+    "foundation": "...",
+    "eyeshadow": "...",
+    "lip": "...",
+    "shading": "...",
+    "blusher": "(없으면 null 또는 \"\")",
+    "highlighter": "(없으면 null 또는 \"\")"
   },
-  "pixelPrompt": "pixel art full-body avatar of a stylish young woman wearing a 핑크 셔링 블라우스, 화이트 플레어 스커트, 진주 귀걸이 in 러블리 fashion, with 핑크 베이지 섀도우, 코랄 틴트, 은은한 핑크 블러셔, and 가벼운 파운데이션 makeup. soft pastel tone. 8-bit sprite. no background."
+  "pixelPrompt": "배경 없는 pixel art 스타일의 전신 아바타. 상의, 하의, 신발, 액세서리, 메이크업(아이섀도우, 립 포함)을 모두 반영. 스타일: ${style}. 8비트, 소프트 파스텔톤, 여성 캐릭터, 단 하나의 이미지."
 }
     `;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: gptPrompt }],
-      temperature: 1.1,
+      temperature: 1.2,
     });
 
-    const content = completion.choices[0].message.content;
-    const parsed = JSON.parse(content || "{}");
+    const rawText = completion.choices[0].message.content ?? "";
+
+    // JSON 응답만 추출 (앞뒤 공백, 코드블록 제거 등)
+    const jsonText = rawText
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const parsed = JSON.parse(jsonText);
 
     return NextResponse.json(parsed);
   } catch (error: any) {
@@ -63,4 +65,3 @@ JSON 형식 예시:
     );
   }
 }
-
