@@ -1,65 +1,52 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
-  const { temp, weatherMain, style } = await req.json();
-  const apiKey = process.env.OPENAI_API_KEY;
+  try {
+    const body = await req.json();
+    const { temp, style, weatherMain, description } = body;
 
-  if (!apiKey) {
-    return NextResponse.json({ error: "Missing OPENAI_API_KEY" }, { status: 500 });
-  }
+    if (!temp || !weatherMain || !description || !style) {
+      return NextResponse.json({ error: "Missing data" }, { status: 400 });
+    }
 
-  const prompt = `
-현재 날씨는 ${weatherMain}, 기온은 ${temp}도입니다.
-이 날씨에 어울리는 "${style}" 스타일의 여성 착장과 메이크업을 추천해주세요.
+    const gptPrompt = `
+날씨: ${description}, 기온: ${temp}도, 스타일: ${style}.
+이 조건에 어울리는 여성용 착장과 메이크업을 창의적으로 구성하고, 아래 형식의 JSON으로 응답해.
 
-[착장 항목]
-- outer
-- top
-- bottom
-- shoes
-- accessory
-
-[메이크업 항목]
-- sunscreen
-- foundation
-- eyeshadow
-- lip
-- shading
-- blusher
-- highlighter
-
-결과는 아래 형식의 JSON으로만 반환해주세요:
 {
-  "style": "${style}",
+  "style": "스타일명",
   "outfit": {
-    ...
+    "outer": "...",
+    "top": "...",
+    "bottom": "...",
+    "shoes": "...",
+    "accessory": "..."
   },
   "makeup": {
-    ...
+    "sunscreen": "...",
+    "foundation": "...",
+    "eyeshadow": "...",
+    "lip": "...",
+    "shading": "...",
+    "blusher": "...",
+    "highlighter": "..."
   },
-  "pixelPrompt": "..."
-}
-`;
+  "pixelPrompt": "pixel art style full-body avatar of a stylish young woman wearing ${상의}, ${하의}, ${액세서리}, in ${style} fashion with ${메이크업 정보들}. pastel tone. soft lighting. no background. 8-bit sprite"
+}`;
 
-  try {
-    const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        temperature: 0.85,
-        messages: [{ role: "user", content: prompt }]
-      })
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [{ role: "user", content: gptPrompt }],
+      temperature: 1.1
     });
 
-    const gptData = await gptRes.json();
-    const content = gptData.choices?.[0]?.message?.content;
+    const text = completion.choices[0].message.content;
+    const data = JSON.parse(text || "{}");
 
-    const parsed = JSON.parse(content);
-    return NextResponse.json(parsed);
+    return NextResponse.json(data);
   } catch (e) {
     return NextResponse.json({ error: "GPT API Error", detail: (e as any).message }, { status: 500 });
   }
