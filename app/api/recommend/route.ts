@@ -1,71 +1,66 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(req: Request) {
-  const { weather } = await req.json();
-  const { temp, description } = weather;
+  const { temp, weatherMain, style } = await req.json();
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return NextResponse.json({ error: "Missing OPENAI_API_KEY" }, { status: 500 });
+  }
 
   const prompt = `
-You are a fashion and beauty stylist AI. Based on the current weather, suggest a complete outfit and makeup look for a trendy Korean woman.
+현재 날씨는 ${weatherMain}, 기온은 ${temp}도입니다.
+이 날씨에 어울리는 "${style}" 스타일의 여성 착장과 메이크업을 추천해주세요.
 
-Current weather:
-- Temperature: ${temp}°C
-- Description: ${description}
+[착장 항목]
+- outer
+- top
+- bottom
+- shoes
+- accessory
 
-Requirements:
-1. Style name: 캐주얼, 미니멀, 러블리, 액티브 등 중 1개.
-2. Outfit must include: top, bottom, shoes, accessory.
-3. If temperature is below 22°C, include outerwear. If above, omit it or use lightweight optional outer.
-4. Makeup: recommend creative and season-appropriate items across sunscreen, foundation, eyeshadow, lip, shading, blusher, highlighter.
-5. Return JSON only — no markdown, no explanations.
+[메이크업 항목]
+- sunscreen
+- foundation
+- eyeshadow
+- lip
+- shading
+- blusher
+- highlighter
 
-Include in the JSON a pixelPrompt field that is a natural English sentence describing the full-body appearance of a pixel avatar with the chosen outfit and makeup, suitable for DALL·E generation (MapleStory-style, white background, full body, cute).
-
-Format:
+결과는 아래 형식의 JSON으로만 반환해주세요:
 {
-  "style": "캐주얼",
+  "style": "${style}",
   "outfit": {
-    "outer": "...",
-    "top": "...",
-    "bottom": "...",
-    "shoes": "...",
-    "accessory": "..."
+    ...
   },
   "makeup": {
-    "sunscreen": "...",
-    "foundation": "...",
-    "eyeshadow": "...",
-    "lip": "...",
-    "shading": "...",
-    "blusher": "...",
-    "highlighter": "..."
+    ...
   },
-  "pixelPrompt": "A Korean girl in pixel art wearing ... with ... makeup, in cute MapleStory style, white background."
+  "pixelPrompt": "..."
 }
 `;
 
   try {
-    const res = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
+    const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4",
+        temperature: 0.85,
+        messages: [{ role: "user", content: prompt }]
+      })
     });
 
-    const raw = res.choices[0].message.content || "";
+    const gptData = await gptRes.json();
+    const content = gptData.choices?.[0]?.message?.content;
 
-    const cleaned = raw.replace(/```json|```/g, "").trim();
-
-    const json = JSON.parse(cleaned);
-
-    return NextResponse.json(json);
-  } catch (e: any) {
-    return NextResponse.json(
-      { error: "GPT API Error", detail: e.message },
-      { status: 500 }
-    );
+    const parsed = JSON.parse(content);
+    return NextResponse.json(parsed);
+  } catch (e) {
+    return NextResponse.json({ error: "GPT API Error", detail: (e as any).message }, { status: 500 });
   }
 }
-
