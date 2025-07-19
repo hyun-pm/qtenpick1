@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ 스타일 & 착장 & 메이크업 추천을 위한 GPT 프롬프트
+    // 1. GPT에 스타일 + 착장 + 메이크업 추천 요청
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
 - 현재 날씨는 "${description}", 기온은 ${temp}도야.
@@ -54,7 +54,6 @@ export async function POST(req: Request) {
 
     const text = completion.choices[0].message.content ?? "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-
     if (!jsonMatch) {
       return NextResponse.json({ error: "GPT returned invalid JSON", raw: text }, { status: 400 });
     }
@@ -66,10 +65,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
     }
 
-    // ✅ pixelPrompt 생성 (안전하고, 정면 중심 & 귀여운 스타일 반영)
+    // 2. 픽셀 이미지 생성을 위한 Prompt 구성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
-      .filter(Boolean)
-      .join(", ");
+      .filter(Boolean).join(", ");
 
     const makeupList = [
       makeup.eyeshadow,
@@ -83,7 +81,8 @@ export async function POST(req: Request) {
 pastel pixel art of a front-facing full-body cute girl character in ${style} style.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
-8-bit sprite, no background, lovely detailed chibi avatar, centered full-body, inspired by MapleStory and Pokédoll style, soft outlines.
+8-bit sprite, no background, centered full-body, chibi proportions, soft outlines.
+inspired by MapleStory and Pokédoll avatar style.
 `.trim();
 
     return NextResponse.json({
