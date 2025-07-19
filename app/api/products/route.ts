@@ -17,21 +17,23 @@ export async function POST(req: Request) {
     const $ = cheerio.load(html);
     const items: { name: string; url: string; thumbnail: string }[] = [];
 
-    $('ul.prdList li').each((_, el) => {
-      const name = $(el).find('.sbj a').text().trim();
-      const href = $(el).find('.sbj a').attr('href') || '';
+    // ✅ 최신 Qoo10 구조에 맞는 유연한 선택자
+    $('a.item_img').each((_, el) => {
+      const name = $(el).attr('title')?.trim() || '';
+      const href = $(el).attr('href') || '';
       const url = href.startsWith('http') ? href : `https://www.qoo10.jp${href}`;
       const thumb = $(el).find('img').attr('src') || '';
 
-      if (name && url && thumb) {
+      // ⚠️ 유효한 썸네일만
+      if (name && url && thumb && !thumb.includes('blank')) {
         items.push({ name, url, thumbnail: thumb });
       }
     });
 
-    console.log('크롤링 결과:', items.length, '개');
-
+    console.log('크롤링된 상품 수:', items.length);
     return NextResponse.json({ items });
   } catch (err: any) {
+    console.error('크롤링 에러:', err);
     return NextResponse.json({ error: '크롤링 실패', detail: err.message }, { status: 500 });
   }
 }
