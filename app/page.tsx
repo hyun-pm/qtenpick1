@@ -15,12 +15,12 @@ export default function Home() {
     setError(null);
 
     try {
-      // 날씨 정보 가져오기
+      // 1. 날씨 정보 가져오기
       const weatherRes = await fetch('/api/weather');
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
 
-      // GPT 추천 요청
+      // 2. GPT 추천 요청 (style은 GPT가 생성)
       const recommendRes = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ export default function Home() {
       }
       setRec(recommendData);
 
-      // 픽셀 캐릭터 이미지 생성
+      // 3. 픽셀 캐릭터 이미지 생성 (Base64 응답)
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,7 +48,7 @@ export default function Home() {
       if (!pixelData.image) {
         throw new Error('픽셀 이미지 생성 실패');
       }
-      setPixel(pixelData.image);
+      setPixel(pixelData.image); // ← Base64 문자열
     } catch (err: any) {
       console.error(err);
       setError(err.message || '에러 발생');
@@ -75,6 +75,7 @@ export default function Home() {
     <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
       <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 오늘의 스타일 추천</h1>
 
+      {/* 날씨 */}
       {weather && (
         <div className="flex items-center gap-2 mb-4">
           <Image
@@ -89,15 +90,18 @@ export default function Home() {
         </div>
       )}
 
+      {/* 스타일 */}
       {rec?.style && (
         <h2 className="text-lg font-bold text-pink-600 mb-2">스타일: "{rec.style}"</h2>
       )}
 
+      {/* 로딩 & 에러 */}
       {loading && <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>}
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
+      {/* 픽셀 캐릭터: Base64는 <img>로 */}
       {!loading && pixel && (
-        <Image
+        <img
           src={pixel}
           alt="추천 캐릭터"
           width={240}
@@ -106,6 +110,7 @@ export default function Home() {
         />
       )}
 
+      {/* 추천 결과 출력 */}
       {rec && (
         <div className="w-full max-w-xs text-sm mb-6">
           <h3 className="font-semibold text-pink-600 mb-1">👗 착장</h3>
@@ -132,6 +137,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* 다시 추천받기 버튼 */}
       <button onClick={refresh} className="mt-4">
         <Image
           src="/icons/button.png"
