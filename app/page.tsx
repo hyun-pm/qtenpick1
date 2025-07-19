@@ -13,8 +13,9 @@ export default function Home() {
   const fetchAll = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      // 날씨 가져오기
+      // 날씨 정보 가져오기
       const weatherRes = await fetch('/api/weather');
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
@@ -31,25 +32,21 @@ export default function Home() {
       });
 
       const recommendData = await recommendRes.json();
-
       if (!recommendData.pixelPrompt) {
         throw new Error('pixelPrompt 누락 - GPT 응답 오류');
       }
-
       setRec(recommendData);
 
-      // 픽셀 이미지 생성 요청
+      // 픽셀 캐릭터 이미지 생성
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
         body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }),
       });
 
       const pixelData = await pixelRes.json();
-
       if (!pixelData.image) {
         throw new Error('픽셀 이미지 생성 실패');
       }
-
       setPixel(pixelData.image);
     } catch (err: any) {
       console.error(err);
@@ -73,70 +70,65 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-sans">
-      <h1 className="text-2xl font-bold mb-4">🎀 오늘의 스타일 추천</h1>
+    <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
+      <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 오늘의 스타일 추천</h1>
 
       {weather && (
-        <div className="flex items-center space-x-2 mb-6">
+        <div className="flex items-center gap-2 mb-4">
           <Image
             src={getWeatherIcon(weather.main)}
-            alt="날씨"
+            alt="날씨 아이콘"
             width={40}
             height={40}
           />
-          <span className="text-sm">
+          <span className="text-sm text-gray-800">
             {weather.description} / {weather.temp}°C
           </span>
         </div>
       )}
 
       {rec?.style && (
-        <h2 className="text-lg font-bold text-pink-700 mb-2">
-          "{rec.style}" 스타일
-        </h2>
+        <h2 className="text-lg font-bold text-pink-600 mb-2">스타일: "{rec.style}"</h2>
       )}
 
-      {loading && (
-        <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>
-      )}
+      {loading && <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>}
 
-      {error && (
-        <p className="text-center text-red-600 mt-4 text-sm">{error}</p>
-      )}
+      {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
         <Image
           src={pixel}
-          alt="캐릭터"
-          width={200}
-          height={200}
-          className="mb-4"
+          alt="추천 캐릭터"
+          width={240}
+          height={240}
+          className="mb-4 rounded"
         />
       )}
 
       {rec && (
         <>
-          <h2 className="text-lg font-semibold mt-4">👗 착장</h2>
-          <ul className="text-left text-sm mb-6">
-            {(Object.entries(rec.outfit) as [string, string][])
-              .filter(([_, value]) => value)
-              .map(([key, value]) => (
-                <li key={key}>
-                  <b>{key}</b>: {value}
-                </li>
-              ))}
-          </ul>
-
-          <h2 className="text-lg font-semibold">💄 메이크업</h2>
-          <ul className="text-left text-sm mb-6">
-            {(Object.entries(rec.makeup) as [string, string][])
-              .filter(([_, value]) => value)
-              .map(([key, value]) => (
-                <li key={key}>
-                  <b>{key}</b>: {value}
-                </li>
-              ))}
-          </ul>
+          <div className="w-full max-w-xs text-sm mb-6">
+            <h3 className="font-semibold text-pink-600 mb-1">👗 착장</h3>
+            <ul className="list-disc ml-4">
+              {(Object.entries(rec.outfit) as [string, string][])
+                .filter(([_, value]) => value)
+                .map(([key, value]) => (
+                  <li key={key}>
+                    <b>{key}</b>: {value}
+                  </li>
+                ))}
+            </ul>
+            <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 메이크업</h3>
+            <ul className="list-disc ml-4">
+              {(Object.entries(rec.makeup) as [string, string][])
+                .filter(([_, value]) => value)
+                .map(([key, value]) => (
+                  <li key={key}>
+                    <b>{key}</b>: {value}
+                  </li>
+                ))}
+            </ul>
+          </div>
         </>
       )}
 
