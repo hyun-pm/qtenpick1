@@ -1,97 +1,127 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [weather, setWeather] = useState<any>(null);
   const [rec, setRec] = useState<any>(null);
-  const [image, setImage] = useState<string | null>(null);
+  const [pixelUrl, setPixelUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      const { latitude, longitude } = pos.coords;
+
+      const weatherRes = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}`);
+      const weatherData = await weatherRes.json();
+      setWeather(weatherData);
+
+      const recommendRes = await fetch('/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ weather: weatherData }),
+      });
+
+      const recommendData = await recommendRes.json();
+      setRec(recommendData);
+
+      const pixelRes = await fetch('/api/pixel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }),
+      });
+
+      const pixelData = await pixelRes.json();
+      setPixelUrl(pixelData.image);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('/api/weather')
-      .then(res => res.json())
-      .then(data => setWeather(data));
-
-    fetch('/api/recommend', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    })
-      .then(res => res.json())
-      .then(data => {
-        setRec(data);
-        return fetch('/api/pixel', {
-          method: 'POST',
-          body: JSON.stringify({ pixelPrompt: data.pixelPrompt }),
-        });
-      })
-      .then(res => res?.json())
-      .then(data => setImage(data?.image || null));
+    fetchData();
   }, []);
 
-  if (!weather || !rec || !image) {
-    return <p className="text-center mt-32 text-gray-500">로딩 중...</p>;
-  }
+  const weatherTextMap: Record<string, string> = {
+    Clear: '맑음',
+    Clouds: '흐림',
+    Rain: '비',
+    Snow: '눈',
+    Thunderstorm: '천둥번개',
+    Drizzle: '이슬비',
+    Fog: '안개',
+    Mist: '안개',
+  };
 
-  // 🌤️ 날씨 상태로부터 아이콘 파일 경로 지정
-  const weatherIconSrc = `/icons/${rec.weather}.png`;
+  const weatherText = rec?.weather ? weatherTextMap[rec.weather] || rec.weather : '';
+  const weatherIconSrc = rec?.weather ? `/icons/${rec.weather}.png` : '';
 
   return (
-    <main className="min-h-screen bg-pink-50 font-['Galmuri11'] p-4">
-      <div className="max-w-xl mx-auto bg-white rounded-xl shadow-md p-6">
-        <h1 className="text-center text-2xl mb-2 font-bold text-pink-600">오늘의 스타일: <span className="text-black">"{rec.style}"</span></h1>
+    <main className="min-h-screen bg-pink-100 font-sans py-10 px-4 flex flex-col items-center">
+      <h1 className="text-3xl font-bold text-pink-700 mb-2">오늘의 스타일: "{rec?.style || ''}"</h1>
 
-        <div className="flex justify-center items-center gap-4 mb-4">
-          {/* 날씨 아이콘 및 온도 표시 */}
-          <img src={weatherIconSrc} alt={rec.weather} className="w-10 h-10" />
-          <p className="text-sm text-gray-700">{rec.weather} · {weather.temp}℃</p>
+      {weather && rec && (
+        <div className="flex items-center gap-2 text-gray-700 text-sm mb-2">
+          {weatherIconSrc && (
+            <img src={weatherIconSrc} alt={rec.weather} className="w-6 h-6 inline-block" />
+          )}
+          <span>{weatherText} · {weather.temp}℃</span>
         </div>
+      )}
 
-        {/* 픽셀 캐릭터 */}
-        <div className="flex justify-center mb-4">
-          <img src={image} alt="Pixel Avatar" className="w-40 h-auto rounded-md border border-pink-200" />
-        </div>
+      {loading && <p className="text-gray-600 mt-4">스타일 추천 중...</p>}
 
-        {/* 착장 정보 */}
-        <div className="mb-4">
-          <h2 className="text-lg font-bold text-pink-500 mb-1">👕 착장</h2>
-          <ul className="ml-4 text-sm leading-6">
-            {Object.entries(rec.outfit).map(([k, v]) => (
-              <li key={k}><b>{k}</b>: {v}</li>
-            ))}
-          </ul>
-        </div>
+      {pixelUrl && (
+        <img src={pixelUrl} alt="픽셀 캐릭터" className="w-40 h-auto rounded-lg mb-4" />
+      )}
 
-        {/* 메이크업 정보 */}
-        <div className="mb-6">
-          <h2 className="text-lg font-bold text-pink-500 mb-1">💄 메이크업</h2>
-          <ul className="ml-4 text-sm leading-6">
-            {Object.entries(rec.makeup).map(([k, v]) => (
-              <li key={k}><b>{k}</b>: {v}</li>
-            ))}
-          </ul>
-        </div>
-
-        {/* 추천 아이템 (향후 구현 예정) */}
-        <div className="mb-4">
-          <h2 className="text-lg font-bold text-pink-500 mb-2">🛍️ 관련 상품</h2>
-          <div className="flex gap-2 justify-between">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="w-24 h-24 bg-gray-100 rounded-md flex items-center justify-center text-sm text-gray-400">
-                상품명
-              </div>
-            ))}
+      {rec && (
+        <>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-pink-700 mb-2">👕 착장</h2>
+            <ul className="ml-4 text-sm leading-6 text-gray-800">
+              {Object.entries(rec.outfit).map(([k, v]) => (
+                <li key={k}><b>{k}</b>: {v}</li>
+              ))}
+            </ul>
           </div>
-        </div>
 
-        {/* 다시 추천받기 버튼 */}
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-full font-bold shadow transition"
-          >
-            다시 추천받기
-          </button>
-        </div>
-      </div>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-pink-700 mb-2">💄 메이크업</h2>
+            <ul className="ml-4 text-sm leading-6 text-gray-800">
+              {Object.entries(rec.makeup).map(([k, v]) => (
+                <li key={k}><b>{k}</b>: {v}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-pink-700 mb-2">🛍 관련 상품</h2>
+            <div className="flex gap-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white w-24 h-28 rounded-lg shadow-md flex flex-col justify-center items-center text-xs text-gray-500">
+                  <div className="w-16 h-16 bg-gray-200 mb-1 rounded" />
+                  <span>상품명</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      <button
+        onClick={fetchData}
+        className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-4 rounded mt-6"
+      >
+        다시 추천받기
+      </button>
     </main>
   );
 }
