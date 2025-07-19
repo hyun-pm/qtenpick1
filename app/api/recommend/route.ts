@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
     }
 
-    // ✨ 픽셀 아바타 프롬프트 생성 (안전성 강화된 표현 사용)
+    // ✅ 안전한 픽셀 아바타 프롬프트 생성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean)
       .join(", ");
@@ -76,13 +76,15 @@ export async function POST(req: Request) {
       makeup.blusher,
       makeup.foundation,
       makeup.highlighter
-    ].filter(Boolean).join(", ");
+    ]
+      .filter(Boolean)
+      .join(", ");
 
     const pixelPrompt = `
 cute pastel pixel art of a front-facing full-body girl character in ${style} fashion.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
-8-bit sprite, soft details, no background, lovely chibi avatar style.
+8-bit sprite, soft details, no background, lovely chibi avatar style, full-body centered.
 `.trim();
 
     return NextResponse.json({
@@ -91,6 +93,7 @@ Makeup includes ${makeupList}.
       makeup,
       pixelPrompt
     });
+
   } catch (error: any) {
     return NextResponse.json(
       { error: "GPT API Error", detail: error.message },
