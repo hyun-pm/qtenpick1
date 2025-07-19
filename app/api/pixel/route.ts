@@ -7,8 +7,8 @@ export async function POST(req: Request) {
   try {
     const { pixelPrompt } = await req.json();
 
-    if (!pixelPrompt) {
-      return NextResponse.json({ error: "Missing pixelPrompt" }, { status: 400 });
+    if (!pixelPrompt || typeof pixelPrompt !== "string") {
+      return NextResponse.json({ error: "Missing or invalid pixelPrompt" }, { status: 400 });
     }
 
     const response = await openai.images.generate({
@@ -20,8 +20,8 @@ export async function POST(req: Request) {
 
     const data = response.data;
 
-    if (!data || data.length === 0 || !data[0].b64_json) {
-      return NextResponse.json({ error: "No image data received from OpenAI" }, { status: 500 });
+    if (!data || !data[0]?.b64_json) {
+      return NextResponse.json({ error: "No image returned from OpenAI" }, { status: 500 });
     }
 
     const image = data[0].b64_json;
