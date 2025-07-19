@@ -143,9 +143,16 @@ export default function Home() {
                 className="flex flex-col items-center text-center hover:opacity-80"
               >
                 <img
-                  src={item.thumbnail || '/icons/fallback.png'}
+                  src={
+                    item.thumbnail && item.thumbnail.startsWith('http')
+                      ? item.thumbnail
+                      : '/icons/fallback.png'
+                  }
                   alt={item.name}
                   className="w-24 h-24 object-cover rounded shadow"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/icons/fallback.png';
+                  }}
                 />
                 <span className="mt-2 text-xs text-gray-800">{item.name}</span>
               </a>
@@ -154,7 +161,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* 다시 추천받기 버튼 */}
       <button onClick={refresh} className="mt-4">
         <Image
           src="/icons/button.png"
