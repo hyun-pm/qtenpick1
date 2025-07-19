@@ -129,7 +129,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 🔍 Qoo10 상품 리스트 */}
+      {/* 🛍️ Qoo10 추천 상품 리스트 */}
       {rec?.products && rec.products.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🛍️ 추천 상품</h3>
