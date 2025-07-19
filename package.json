@@ -12,7 +12,8 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "openai": "^4.21.1",
-    "cheerio": "1.0.0-rc.3"
+    "cheerio": "1.0.0-rc.3",
+    "puppeteer": "^21.3.8"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.12",
