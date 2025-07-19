@@ -43,7 +43,9 @@ export default function Home() {
         });
 
         const productsData = await productsRes.json();
-        recommendData.products = productsData.items || [];
+
+        // ✅ 수정된 부분: products가 undefined인 경우도 안전하게 처리
+        recommendData.products = Array.isArray(productsData?.items) ? productsData.items : [];
       }
 
       // ✅ 픽셀 이미지 요청
