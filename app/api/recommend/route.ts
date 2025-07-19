@@ -16,16 +16,14 @@ export async function POST(req: Request) {
     }
 
     const gptPrompt = `
-너는 창의적이고 실용적인 여성 스타일 추천 전문가야.
+너는 감각 있는 여성 스타일 코디 전문가야.
 - 현재 날씨는 "${description}", 기온은 ${temp}도야.
-- 이 조건에 어울리는 스타일 이름을 정하고, 그 스타일에 맞는 여성 착장(outfit)과 메이크업(makeup)을 추천해줘.
+- 이 조건에 어울리는 스타일 이름을 정하고, 그 스타일에 맞는 착장(outfit)과 메이크업(makeup)을 추천해줘.
 
 [조건]
-- JSON 형식으로만 응답해.
-- 설명 절대 포함하지 마.
-- 각 필드는 비어있거나 누락되면 안돼.
-- outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}.
-- makeup 항목은 실제 상황에 맞춰 자유롭게 구성.
+- 반드시 JSON 형식으로 응답해. 설명 절대 포함하지 마.
+- 모든 필드가 채워져 있어야 해. outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}.
+- makeup 항목은 실제 날씨 상황에 맞게 구성하되 최소 4개 이상은 포함할 것.
 
 [응답 형식]
 {
@@ -52,7 +50,7 @@ export async function POST(req: Request) {
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: gptPrompt }],
-      temperature: 1.2,
+      temperature: 1.3
     });
 
     const text = completion.choices[0].message.content ?? "";
@@ -70,28 +68,28 @@ export async function POST(req: Request) {
     const { style, outfit, makeup } = parsed;
 
     if (!style || !outfit || !makeup) {
-      return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing style/outfit/makeup" },
+        { status: 400 }
+      );
     }
 
-    // ✅ pixelPrompt를 직접 구성
+    // 🎨 pixelPrompt 생성
+    const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
+      .filter(Boolean)
+      .join(", ");
+
     const makeupList = [
       makeup.eyeshadow,
       makeup.lip,
       makeup.blusher,
-      makeup.foundation
+      makeup.foundation,
+      makeup.highlighter
     ].filter(Boolean).join(", ");
 
-    const outfitList = [
-      outfit.top,
-      outfit.bottom,
-      outfit.shoes,
-      outfit.accessory,
-      outfit.outer
-    ]
-      .filter(Boolean)
-      .join(", ");
-
-    const pixelPrompt = `pixel art style full-body avatar of a stylish young woman wearing ${outfitList}, in ${style} fashion. makeup includes ${makeupList}. pastel color. 8-bit sprite. no background.`;
+    const pixelPrompt = `
+pastel tone pixel art of a cute, full-body female character wearing ${outfitList}, in ${style} style. makeup includes ${makeupList}. 8-bit sprite, no background, lovely detailed avatar style.
+`.trim();
 
     return NextResponse.json({
       style,
@@ -99,6 +97,7 @@ export async function POST(req: Request) {
       makeup,
       pixelPrompt,
     });
+
   } catch (error: any) {
     return NextResponse.json(
       { error: "GPT API Error", detail: error.message },
