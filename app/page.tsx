@@ -8,36 +8,52 @@ export default function Home() {
   const [rec, setRec] = useState<any>(null);
   const [pixel, setPixel] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
+    setError(null);
     try {
+      // 날씨 가져오기
       const weatherRes = await fetch('/api/weather');
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
 
+      // GPT 추천 요청
       const recommendRes = await fetch('/api/recommend', {
         method: 'POST',
         body: JSON.stringify({
           temp: weatherData.temp,
           weatherMain: weatherData.main,
           description: weatherData.description,
-          style: '러블리', // 또는 사용자 입력 스타일
+          style: '러블리',
         }),
       });
 
       const recommendData = await recommendRes.json();
+
+      if (!recommendData.pixelPrompt) {
+        throw new Error('pixelPrompt 누락 - GPT 응답 오류');
+      }
+
       setRec(recommendData);
 
+      // 픽셀 이미지 생성 요청
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
-        body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }), // ✅ 고침
+        body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }),
       });
 
       const pixelData = await pixelRes.json();
+
+      if (!pixelData.image) {
+        throw new Error('픽셀 이미지 생성 실패');
+      }
+
       setPixel(pixelData.image);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.message || '에러 발생');
     } finally {
       setLoading(false);
     }
@@ -68,12 +84,24 @@ export default function Home() {
             width={40}
             height={40}
           />
-          <span className="text-sm">{weather.description} / {weather.temp}°C</span>
+          <span className="text-sm">
+            {weather.description} / {weather.temp}°C
+          </span>
         </div>
+      )}
+
+      {rec?.style && (
+        <h2 className="text-lg font-bold text-pink-700 mb-2">
+          "{rec.style}" 스타일
+        </h2>
       )}
 
       {loading && (
         <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>
+      )}
+
+      {error && (
+        <p className="text-center text-red-600 mt-4 text-sm">{error}</p>
       )}
 
       {!loading && pixel && (
@@ -88,7 +116,7 @@ export default function Home() {
 
       {rec && (
         <>
-          <h2 className="text-lg font-semibold">👗 착장</h2>
+          <h2 className="text-lg font-semibold mt-4">👗 착장</h2>
           <ul className="text-left text-sm mb-6">
             {(Object.entries(rec.outfit) as [string, string][])
               .filter(([_, value]) => value)
@@ -113,7 +141,12 @@ export default function Home() {
       )}
 
       <button onClick={refresh} className="mt-4">
-        <Image src="/icons/button.png" alt="다시 추천받기" width={120} height={40} />
+        <Image
+          src="/icons/button.png"
+          alt="다시 추천받기"
+          width={120}
+          height={40}
+        />
       </button>
     </main>
   );
