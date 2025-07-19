@@ -22,7 +22,7 @@ export default function Home() {
           temp: weatherData.temp,
           weatherMain: weatherData.main,
           description: weatherData.description,
-          style: '러블리', // or 랜덤 스타일
+          style: '러블리', // 또는 사용자 입력 스타일
         }),
       });
 
@@ -31,7 +31,7 @@ export default function Home() {
 
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
-        body: JSON.stringify({ prompt: recommendData.pixelPrompt }),
+        body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }), // ✅ 고침
       });
 
       const pixelData = await pixelRes.json();
