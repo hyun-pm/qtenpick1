@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트 강화: JSON only + 한 줄로 출력
+    // ✅ GPT 프롬프트 수정: JSON.stringify → 진짜 JSON 객체만 응답하도록 요청
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
 - 오늘 날씨는 "${description}", 기온은 ${temp}도야.
@@ -20,9 +20,10 @@ export async function POST(req: Request) {
 - 그리고 상품 추천과 착장을 기반으로 Qoo10에서 검색할 만한 키워드 배열도 포함해줘.
 
 [조건]
-- 반드시 JSON.stringify()된 JSON 형태로만 응답해.
+- 반드시 유효한 JSON 객체로만 응답해.
 - 설명, 줄바꿈, 주석 없이 한 줄로만 출력해.
 - 키와 값은 쌍따옴표("")로 감싸고, 전체는 { 로 시작해서 } 로 끝나야 해.
+- JSON 문자열이 아닌 실제 JSON 객체 형식으로 응답해야 해.
 - 아래 구조를 따라줘:
 
 {
