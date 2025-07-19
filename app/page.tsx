@@ -20,14 +20,16 @@ export default function Home() {
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
 
-      // GPT 추천 요청
+      // GPT 추천 요청 (style 생략 → GPT가 자동 생성)
       const recommendRes = await fetch('/api/recommend', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           temp: weatherData.temp,
           weatherMain: weatherData.main,
           description: weatherData.description,
-          style: '러블리',
         }),
       });
 
@@ -40,6 +42,9 @@ export default function Home() {
       // 픽셀 캐릭터 이미지 생성
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ pixelPrompt: recommendData.pixelPrompt }),
       });
 
@@ -92,7 +97,6 @@ export default function Home() {
       )}
 
       {loading && <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>}
-
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
@@ -106,30 +110,29 @@ export default function Home() {
       )}
 
       {rec && (
-        <>
-          <div className="w-full max-w-xs text-sm mb-6">
-            <h3 className="font-semibold text-pink-600 mb-1">👗 착장</h3>
-            <ul className="list-disc ml-4">
-              {(Object.entries(rec.outfit) as [string, string][])
-                .filter(([_, value]) => value)
-                .map(([key, value]) => (
-                  <li key={key}>
-                    <b>{key}</b>: {value}
-                  </li>
-                ))}
-            </ul>
-            <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 메이크업</h3>
-            <ul className="list-disc ml-4">
-              {(Object.entries(rec.makeup) as [string, string][])
-                .filter(([_, value]) => value)
-                .map(([key, value]) => (
-                  <li key={key}>
-                    <b>{key}</b>: {value}
-                  </li>
-                ))}
-            </ul>
-          </div>
-        </>
+        <div className="w-full max-w-xs text-sm mb-6">
+          <h3 className="font-semibold text-pink-600 mb-1">👗 착장</h3>
+          <ul className="list-disc ml-4">
+            {(Object.entries(rec.outfit) as [string, string][])
+              .filter(([_, value]) => value)
+              .map(([key, value]) => (
+                <li key={key}>
+                  <b>{key}</b>: {value}
+                </li>
+              ))}
+          </ul>
+
+          <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 메이크업</h3>
+          <ul className="list-disc ml-4">
+            {(Object.entries(rec.makeup) as [string, string][])
+              .filter(([_, value]) => value)
+              .map(([key, value]) => (
+                <li key={key}>
+                  <b>{key}</b>: {value}
+                </li>
+              ))}
+          </ul>
+        </div>
       )}
 
       <button onClick={refresh} className="mt-4">
