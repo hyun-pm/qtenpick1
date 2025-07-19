@@ -33,6 +33,19 @@ export default function Home() {
       if (!recommendData.pixelPrompt) {
         throw new Error('pixelPrompt 누락 - GPT 응답 오류');
       }
+
+      // ✅ GPT 응답에 keywords가 있을 경우 → /api/products로 상품 검색 요청
+      if (Array.isArray(recommendData.keywords) && recommendData.keywords.length > 0) {
+        const productsRes = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keywords: recommendData.keywords }),
+        });
+
+        const productsData = await productsRes.json();
+        recommendData.products = productsData.items || [];
+      }
+
       setRec(recommendData);
 
       const pixelRes = await fetch('/api/pixel', {
