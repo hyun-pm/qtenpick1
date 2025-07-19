@@ -20,7 +20,7 @@ export default function Home() {
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
 
-      // 2. GPT 추천 요청 (style은 GPT가 생성)
+      // 2. GPT 추천 요청
       const recommendRes = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,7 +37,7 @@ export default function Home() {
       }
       setRec(recommendData);
 
-      // 3. 픽셀 캐릭터 이미지 생성 (Base64 응답)
+      // 3. 픽셀 캐릭터 이미지 생성
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,7 +48,7 @@ export default function Home() {
       if (!pixelData.image) {
         throw new Error('픽셀 이미지 생성 실패');
       }
-      setPixel(pixelData.image); // ← Base64 문자열
+      setPixel(pixelData.image);
     } catch (err: any) {
       console.error(err);
       setError(err.message || '에러 발생');
@@ -70,6 +70,9 @@ export default function Home() {
     const iconName = safeMain.charAt(0).toUpperCase() + safeMain.slice(1).toLowerCase();
     return `/icons/${iconName}.png`;
   };
+
+  const buildQoo10SearchURL = (keyword: string) =>
+    `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(keyword)}`;
 
   return (
     <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
@@ -99,7 +102,7 @@ export default function Home() {
       {loading && <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>}
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
-      {/* 픽셀 캐릭터: Base64는 <img>로 */}
+      {/* 픽셀 캐릭터 */}
       {!loading && pixel && (
         <img
           src={pixel}
@@ -110,7 +113,7 @@ export default function Home() {
         />
       )}
 
-      {/* 추천 결과 출력 */}
+      {/* 착장 & 메이크업 */}
       {rec && (
         <div className="w-full max-w-xs text-sm mb-6">
           <h3 className="font-semibold text-pink-600 mb-1">👗 착장</h3>
@@ -133,6 +136,27 @@ export default function Home() {
                   <b>{key}</b>: {value}
                 </li>
               ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 🔍 추천 상품 리스트 (Qoo10) */}
+      {rec?.keywords && rec.keywords.length > 0 && (
+        <div className="w-full max-w-xs text-sm mb-6 mt-4">
+          <h3 className="font-semibold text-pink-600 mb-2">🛍️ 추천 키워드 상품 보기</h3>
+          <ul className="list-disc ml-4 space-y-1">
+            {rec.keywords.map((keyword: string, index: number) => (
+              <li key={index}>
+                <a
+                  href={buildQoo10SearchURL(keyword)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  {keyword}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
       )}
