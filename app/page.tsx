@@ -6,120 +6,114 @@ import Image from 'next/image';
 export default function Home() {
   const [weather, setWeather] = useState<any>(null);
   const [rec, setRec] = useState<any>(null);
-  const [pixelUrl, setPixelUrl] = useState<string | null>(null);
+  const [pixel, setPixel] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  const fetchWeather = async () => {
-    const lat = 37.5665;
-    const lon = 126.9780;
-    const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
-    const data = await res.json();
-    setWeather(data);
-  };
-
-  const fetchRecommendation = async () => {
-    if (!weather) return;
+  const fetchAll = async () => {
     setLoading(true);
-    setRec(null);
-    setPixelUrl(null);
+    try {
+      const weatherRes = await fetch('/api/weather');
+      const weatherData = await weatherRes.json();
+      setWeather(weatherData);
 
-    const styleOptions = ["캐주얼", "러블리", "미니멀", "시크", "빈티지"];
-    const randomStyle = styleOptions[Math.floor(Math.random() * styleOptions.length)];
+      const recommendRes = await fetch('/api/recommend', {
+        method: 'POST',
+        body: JSON.stringify({
+          temp: weatherData.temp,
+          weatherMain: weatherData.main,
+          description: weatherData.description,
+          style: '러블리', // or 랜덤 스타일
+        }),
+      });
 
-    const res = await fetch('/api/recommend', {
-      method: 'POST',
-      body: JSON.stringify({
-        temp: weather.temp,
-        weatherMain: weather.weatherMain,
-        description: weather.description,
-        style: randomStyle
-      }),
-    });
+      const recommendData = await recommendRes.json();
+      setRec(recommendData);
 
-    const data = await res.json();
+      const pixelRes = await fetch('/api/pixel', {
+        method: 'POST',
+        body: JSON.stringify({ prompt: recommendData.pixelPrompt }),
+      });
 
-    if (!data.pixelPrompt) {
+      const pixelData = await pixelRes.json();
+      setPixel(pixelData.image);
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setRec(data);
-
-    const pixelRes = await fetch('/api/pixel', {
-      method: 'POST',
-      body: JSON.stringify({ pixelPrompt: data.pixelPrompt }),
-    });
-
-    const pixelData = await pixelRes.json();
-    setPixelUrl(pixelData.image);
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchWeather();
+    fetchAll();
   }, []);
 
-  useEffect(() => {
-    if (weather) fetchRecommendation();
-  }, [weather]);
+  const refresh = () => {
+    fetchAll();
+  };
 
-  const weatherIcon = weather?.weatherMain
-    ? `/icons/${weather.weatherMain}.png`
-    : '/icons/Clear.png';
+  const getWeatherIcon = (main: string) => {
+    const safeMain = main || 'Clear';
+    return `/icons/${safeMain}.png`;
+  };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start p-6 bg-pink-100 text-center font-sans">
-      <h1 className="text-3xl font-bold text-pink-700 mt-6 mb-2">✨ 오늘의 스타일 ✨</h1>
+    <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-sans">
+      <h1 className="text-2xl font-bold mb-4">🎀 오늘의 스타일 추천</h1>
 
       {weather && (
-        <div className="flex items-center justify-center gap-2 text-gray-700 text-lg mb-4">
-          <Image src={weatherIcon} alt="날씨 아이콘" width={32} height={32} />
-          <span>{weather.description} / {weather.temp.toFixed(2)}℃</span>
+        <div className="flex items-center space-x-2 mb-6">
+          <Image
+            src={getWeatherIcon(weather.main)}
+            alt="날씨"
+            width={40}
+            height={40}
+          />
+          <span className="text-sm">{weather.description} / {weather.temp}°C</span>
         </div>
       )}
 
-      {loading && <p className="text-gray-500">로딩 중...</p>}
+      {loading && (
+        <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>
+      )}
 
-      {!loading && rec && (
+      {!loading && pixel && (
+        <Image
+          src={pixel}
+          alt="캐릭터"
+          width={200}
+          height={200}
+          className="mb-4"
+        />
+      )}
+
+      {rec && (
         <>
-          <h2 className="text-xl font-semibold text-pink-700 mb-2">👗 착장</h2>
-          {pixelUrl && (
-            <div className="mb-4">
-              <Image
-                src={pixelUrl}
-                alt="추천 픽셀 캐릭터"
-                width={200}
-                height={200}
-                className="mx-auto"
-              />
-            </div>
-          )}
-
+          <h2 className="text-lg font-semibold">👗 착장</h2>
           <ul className="text-left text-sm mb-6">
-            {Object.entries(rec.outfit).map(([key, value]) => (
-              value && <li key={key}><b>{key}</b>: {value}</li>
-            ))}
+            {(Object.entries(rec.outfit) as [string, string][])
+              .filter(([_, value]) => value)
+              .map(([key, value]) => (
+                <li key={key}>
+                  <b>{key}</b>: {value}
+                </li>
+              ))}
           </ul>
 
-          <h2 className="text-xl font-semibold text-pink-700 mb-2">💄 메이크업</h2>
+          <h2 className="text-lg font-semibold">💄 메이크업</h2>
           <ul className="text-left text-sm mb-6">
-            {Object.entries(rec.makeup).map(([key, value]) => (
-              value && <li key={key}><b>{key}</b>: {value}</li>
-            ))}
+            {(Object.entries(rec.makeup) as [string, string][])
+              .filter(([_, value]) => value)
+              .map(([key, value]) => (
+                <li key={key}>
+                  <b>{key}</b>: {value}
+                </li>
+              ))}
           </ul>
         </>
       )}
 
-      <button
-        onClick={fetchRecommendation}
-        className="mt-6"
-      >
-        <Image
-          src="/icons/button.png"
-          alt="다시 추천받기"
-          width={150}
-          height={50}
-        />
+      <button onClick={refresh} className="mt-4">
+        <Image src="/icons/button.png" alt="다시 추천받기" width={120} height={40} />
       </button>
     </main>
   );
