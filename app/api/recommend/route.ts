@@ -12,39 +12,58 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // 1. 스타일 추천 GPT 프롬프트
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
 - 오늘 날씨는 "${description}", 기온은 ${temp}도야.
-- 이 조건에 어울리는 스타일 이름(style), 착장(outfit), 메이크업(makeup)을 구성해줘.
+- 이 조건에 어울리는 스타일 이름(style), 착장(outfit), 메이크업(makeup), 그리고 Qoo10 상품 3~5개를 추천해줘.
 
 [조건]
-- 반드시 JSON 형식으로 응답해. 설명은 절대 포함하지 마.
-- 모든 필드는 반드시 채워져 있어야 해.
+- JSON 형식으로만 응답해. 설명 절대 금지.
+- 모든 필드는 반드시 채워져야 해.
 - outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}.
-- makeup 항목은 최소 4개 이상 포함할 것.
+- makeup 항목은 최소 4개 이상 포함.
+- products 항목은 다음 구조의 배열로 제공:
 
-[응답 형식]
+"products": [
+  {
+    "name": "상품 이름",
+    "url": "상품 링크 (Qoo10에서 검색 또는 직접 링크)",
+    "thumbnail": "상품 썸네일 URL (가능한 경우)"
+  },
+  ...
+]
+
+[응답 예시]
 {
-  "style": "스타일명",
+  "style": "러블리",
   "outfit": {
-    "outer": "...",
-    "top": "...",
-    "bottom": "...",
-    "shoes": "...",
-    "accessory": "..."
+    "outer": "화이트 가디건",
+    "top": "핑크 블라우스",
+    "bottom": "플리츠 미니스커트",
+    "shoes": "연핑크 플랫슈즈",
+    "accessory": "리본 헤어핀"
   },
   "makeup": {
-    "sunscreen": "...",
-    "foundation": "...",
-    "eyeshadow": "...",
-    "lip": "...",
-    "shading": "...",
-    "blusher": "...",
-    "highlighter": "..."
-  }
+    "sunscreen": "SPF50+",
+    "foundation": "촉촉한 쿠션",
+    "eyeshadow": "코랄 섀도우",
+    "lip": "로지 핑크 틴트",
+    "blusher": "살구색 블러셔"
+  },
+  "products": [
+    {
+      "name": "페리페라 로지 틴트",
+      "url": "https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=페리페라%20로지%20틴트",
+      "thumbnail": "https://image.example.com/peripera.jpg"
+    },
+    {
+      "name": "화이트 가디건",
+      "url": "https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=화이트%20가디건",
+      "thumbnail": "https://image.example.com/cardigan.jpg"
+    }
+  ]
 }
-    `;
+`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -59,13 +78,13 @@ export async function POST(req: Request) {
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
-    const { style, outfit, makeup } = parsed;
+    const { style, outfit, makeup, products } = parsed;
 
-    if (!style || !outfit || !makeup) {
-      return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
+    if (!style || !outfit || !makeup || !products) {
+      return NextResponse.json({ error: "Missing style/outfit/makeup/products" }, { status: 400 });
     }
 
-    // 2. 픽셀 아바타 이미지 프롬프트 생성
+    // 픽셀 캐릭터 생성 프롬프트
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean).join(", ");
 
@@ -86,31 +105,15 @@ Centered composition, chibi proportions, soft outlines, lovely and modern stylin
 Inspired by MapleStory avatars and You.and.d OOTD pixel art collection.
     `.trim();
 
-    // 3. 상품 검색용 키워드 구성
-    const keywords = [
-      style,
-      outfit.top,
-      outfit.bottom,
-      outfit.shoes,
-      outfit.accessory,
-      makeup.eyeshadow,
-      makeup.lip,
-      makeup.blusher,
-      makeup.foundation
-    ].filter(Boolean);
-
     return NextResponse.json({
       style,
       outfit,
       makeup,
       pixelPrompt,
-      keywords
+      products
     });
 
   } catch (error: any) {
-    return NextResponse.json(
-      { error: "GPT API Error", detail: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "GPT API Error", detail: error.message }, { status: 500 });
   }
 }
