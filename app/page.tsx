@@ -34,7 +34,7 @@ export default function Home() {
         throw new Error('pixelPrompt 누락 - GPT 응답 오류');
       }
 
-      // ✅ GPT 응답에 keywords가 있을 경우 → /api/products로 상품 검색 요청
+      // ✅ Qoo10 상품 추천 추가 요청
       if (Array.isArray(recommendData.keywords) && recommendData.keywords.length > 0) {
         const productsRes = await fetch('/api/products', {
           method: 'POST',
@@ -46,8 +46,7 @@ export default function Home() {
         recommendData.products = productsData.items || [];
       }
 
-      setRec(recommendData);
-
+      // ✅ 픽셀 이미지 요청
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,7 +57,11 @@ export default function Home() {
       if (!pixelData.image) {
         throw new Error('픽셀 이미지 생성 실패');
       }
+
       setPixel(pixelData.image);
+
+      // ✅ 모든 로직 끝난 뒤에 최종적으로 추천 결과 저장
+      setRec(recommendData);
     } catch (err: any) {
       console.error(err);
       setError(err.message || '에러 발생');
