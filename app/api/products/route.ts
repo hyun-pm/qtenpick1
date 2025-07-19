@@ -13,9 +13,11 @@ export async function POST(req: Request) {
   const searchUrl = `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(keyword)}`;
 
   try {
-    // ✅ 안전하게 fallback 처리 포함
-    const executablePath =
-      (await chromium.executablePath) || '/usr/bin/chromium-browser';
+    // ✅ null 대응 추가
+    const executablePath = await chromium.executablePath;
+    if (!executablePath) {
+      throw new Error('No executablePath found — Vercel 환경에서 실행할 수 없습니다.');
+    }
 
     const browser = await puppeteer.launch({
       args: chromium.args,
