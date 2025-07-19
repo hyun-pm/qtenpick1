@@ -9,42 +9,49 @@ export async function POST(req: Request) {
     const { temp, style, weatherMain, description } = body;
 
     if (!temp || !style || !weatherMain || !description) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
     }
 
     const gptPrompt = `
-너는 전문적인 여성 패션 스타일 추천 코디네이터야.
-- 오늘 날씨는 "${description}"이며, 기온은 ${temp}도야.
-- 사용자가 원하는 스타일은 "${style}"이야.
-- 이 조건에 어울리는 여성용 착장과 메이크업을 구성해줘.
+너는 창의적이고 실용적인 여성 스타일 추천 전문가야.
+- 현재 날씨는 "${description}", 기온은 ${temp}도야.
+- 사용자는 "${style}" 스타일을 원해.
+- 이 조건에 어울리는 여성용 착장과 메이크업을 추천하고, 해당 내용을 기반으로 픽셀 캐릭터 이미지를 만들기 위한 프롬프트도 함께 생성해.
 
-규칙:
-- 반드시 JSON 형식으로 응답해. 설명 없이 JSON만 출력해.
-- 각 필드는 비어있거나 생략되면 안돼. (단, outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"})
-- makeup은 필요한 항목만 포함하되, 빠지면 안 돼.
-- 마지막 pixelPrompt는 추천된 outfit과 makeup 정보를 바탕으로 구성해.
-- pixelPrompt에는 top, bottom, accessory, style, 메이크업을 자연스럽게 반영할 것.
+[조건]
+- 반드시 JSON 형식으로 응답해. 설명은 절대 포함하지 마.
+- 각 필드는 빠짐없이 채워져야 함. 단, outer는 ${temp > 20 ? "기온이 높기 때문에 생략 가능" : "반드시 포함"}.
+- makeup 항목들은 실제 필요한 경우에만 포함. 누락되면 안 됨.
+- 마지막 pixelPrompt는 위 추천 내용을 자연스럽게 반영한 영어 프롬프트여야 하며, 다음 조건을 만족해야 함:
+  - pastel color 8-bit sprite
+  - no background
+  - full-body avatar
+  - makeup 포함
+  - 스타일 이름 포함
 
-반드시 아래 형식으로 응답해:
+[응답 형식]
 {
-  "style": "",
+  "style": "Lovely",
   "outfit": {
-    "outer": "",
-    "top": "",
-    "bottom": "",
-    "shoes": "",
-    "accessory": ""
+    "outer": "white cardigan",
+    "top": "floral pink blouse",
+    "bottom": "white pleated mini skirt",
+    "shoes": "pastel pink ballet flats",
+    "accessory": "flower hairpin and pearl earrings"
   },
   "makeup": {
-    "sunscreen": "",
-    "foundation": "",
-    "eyeshadow": "",
-    "lip": "",
-    "shading": "",
-    "blusher": "",
-    "highlighter": ""
+    "sunscreen": "SPF50+ lightweight sunblock",
+    "foundation": "glow finish cushion foundation",
+    "eyeshadow": "soft coral shimmer",
+    "lip": "rosy pink gloss",
+    "shading": "light brown shading",
+    "blusher": "peach tone cream blush",
+    "highlighter": "champagne shimmer on cheekbones"
   },
-  "pixelPrompt": ""
+  "pixelPrompt": "pixel art style full-body avatar of a stylish young woman wearing a floral pink blouse, white pleated skirt, pastel pink ballet flats, with flower hairpin and pearl earrings, in Lovely fashion. makeup includes coral shimmer eyeshadow, rosy pink lip, peach blush. no background. pastel tone. 8-bit sprite."
 }
     `;
 
@@ -55,16 +62,23 @@ export async function POST(req: Request) {
     });
 
     const text = completion.choices[0].message.content ?? "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
 
+    // JSON 블록만 추출
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return NextResponse.json({ error: "GPT returned invalid JSON", raw: text }, { status: 400 });
+      return NextResponse.json(
+        { error: "GPT returned invalid JSON", raw: text },
+        { status: 400 }
+      );
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
 
     if (!parsed.pixelPrompt || typeof parsed.pixelPrompt !== "string") {
-      return NextResponse.json({ error: "Missing or invalid pixelPrompt", raw: parsed }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing or invalid pixelPrompt", raw: parsed },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(parsed);
