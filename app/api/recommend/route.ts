@@ -12,6 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // ✅ GPT 프롬프트
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
 - 오늘 날씨는 "${description}", 기온은 ${temp}도야.
@@ -29,40 +30,8 @@ export async function POST(req: Request) {
     "name": "상품 이름",
     "url": "상품 링크 (Qoo10에서 검색 또는 직접 링크)",
     "thumbnail": "상품 썸네일 URL (가능한 경우)"
-  },
-  ...
+  }
 ]
-
-[응답 예시]
-{
-  "style": "러블리",
-  "outfit": {
-    "outer": "화이트 가디건",
-    "top": "핑크 블라우스",
-    "bottom": "플리츠 미니스커트",
-    "shoes": "연핑크 플랫슈즈",
-    "accessory": "리본 헤어핀"
-  },
-  "makeup": {
-    "sunscreen": "SPF50+",
-    "foundation": "촉촉한 쿠션",
-    "eyeshadow": "코랄 섀도우",
-    "lip": "로지 핑크 틴트",
-    "blusher": "살구색 블러셔"
-  },
-  "products": [
-    {
-      "name": "페리페라 로지 틴트",
-      "url": "https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=페리페라%20로지%20틴트",
-      "thumbnail": "https://image.example.com/peripera.jpg"
-    },
-    {
-      "name": "화이트 가디건",
-      "url": "https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=화이트%20가디건",
-      "thumbnail": "https://image.example.com/cardigan.jpg"
-    }
-  ]
-}
 `;
 
     const completion = await openai.chat.completions.create({
@@ -80,11 +49,11 @@ export async function POST(req: Request) {
     const parsed = JSON.parse(jsonMatch[0]);
     const { style, outfit, makeup, products } = parsed;
 
-    if (!style || !outfit || !makeup || !products) {
+    if (!style || !outfit || !makeup || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json({ error: "Missing style/outfit/makeup/products" }, { status: 400 });
     }
 
-    // 픽셀 캐릭터 생성 프롬프트
+    // ✅ 픽셀 캐릭터 이미지 프롬프트 생성 (안전성 향상 + 완성도 보장)
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean).join(", ");
 
@@ -97,12 +66,12 @@ export async function POST(req: Request) {
     ].filter(Boolean).join(", ");
 
     const pixelPrompt = `
-high-resolution pixel art of a full-body front-facing cute Korean girl character in ${style} fashion.
+pastel pixel art of a full-body front-facing cute Korean girl character in ${style} style.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
-Centered composition, chibi proportions, soft outlines, lovely and modern styling.
-8-bit sprite with no background. Soft pastel color palette.
-Inspired by MapleStory avatars and You.and.d OOTD pixel art collection.
+Centered, chibi proportions, soft outlines.
+Modern styling, 8-bit sprite, no background.
+Inspired by MapleStory avatars and You.and.d pixel art.
     `.trim();
 
     return NextResponse.json({
@@ -114,6 +83,10 @@ Inspired by MapleStory avatars and You.and.d OOTD pixel art collection.
     });
 
   } catch (error: any) {
-    return NextResponse.json({ error: "GPT API Error", detail: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "GPT API Error", detail: error.message },
+      { status: 500 }
+    );
   }
+}
 }
