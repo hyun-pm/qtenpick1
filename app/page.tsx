@@ -12,7 +12,7 @@ export default function Home() {
     setLoading(true);
     setPixel(null);
     try {
-      // 기본 위치 (서울)
+      // 서울 좌표
       const lat = 37.5665;
       const lon = 126.978;
 
@@ -21,20 +21,21 @@ export default function Home() {
       const weatherData = await weatherRes.json();
       setWeather(weatherData);
 
-      // 2. GPT 추천 호출
+      // 2. 추천 API 호출
       const recommendRes = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           temp: weatherData.temp,
-          style: getRandomStyle(), // 스타일도 매번 랜덤으로
-          weatherMain: weatherData.main
+          weatherMain: weatherData.main,
+          description: weatherData.description,
+          style: getRandomStyle()
         })
       });
       const recData = await recommendRes.json();
       setRec(recData);
 
-      // 3. 픽셀 캐릭터 이미지 생성 호출
+      // 3. 픽셀 이미지 생성
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,7 +44,7 @@ export default function Home() {
       const pixelData = await pixelRes.json();
       setPixel(pixelData.image);
     } catch (e) {
-      console.error('Error:', e);
+      console.error('에러:', e);
     } finally {
       setLoading(false);
     }
@@ -59,28 +60,28 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex flex-col items-center min-h-screen bg-pink-100 py-10 font-['Galmuri11'] text-center text-sm">
-      <h1 className="text-3xl font-bold text-pink-600 mb-2">오늘의 스타일:</h1>
-      {rec && <div className="text-xl mb-4">"{rec.style}"</div>}
+    <main className="flex flex-col items-center min-h-screen bg-pink-100 py-10 font-['Galmuri11'] text-sm">
+      <h1 className="text-3xl font-bold text-pink-600 mb-2">오늘의 스타일</h1>
+      {rec && <div className="text-lg mb-4">"{rec.style}"</div>}
 
-      {/* 날씨 출력 */}
+      {/* 날씨 정보 */}
       {weather && (
-        <div className="flex items-center justify-center gap-2 text-black text-sm mb-4">
+        <div className="flex items-center gap-2 mb-4 text-gray-800 text-sm">
           <img
             src={`/icons/${weather.main}.png`}
             alt={weather.main}
             className="w-6 h-6"
           />
-          현재 날씨: {weather.description} · {weather.temp}°C
+          <span>{weather.description} / {weather.temp}°C</span>
         </div>
       )}
 
-      {/* 픽셀 캐릭터 */}
+      {/* 캐릭터 이미지 */}
       {pixel && (
         <img
           src={pixel}
-          alt="캐릭터"
-          className="w-40 h-40 object-contain mx-auto mb-4"
+          alt="픽셀 아바타"
+          className="w-40 h-40 object-contain mb-4"
         />
       )}
 
@@ -89,7 +90,7 @@ export default function Home() {
         <div className="mb-6">
           <h2 className="text-lg text-pink-600 font-semibold mb-1">👕 착장</h2>
           <ul className="text-left ml-4 leading-6">
-            {Object.entries(rec.outfit).map(([key, value]) => (
+            {Object.entries(rec.outfit as Record<string, string>).map(([key, value]) => (
               <li key={key}>
                 <b>{key}:</b> {value}
               </li>
@@ -103,7 +104,7 @@ export default function Home() {
         <div className="mb-6">
           <h2 className="text-lg text-pink-600 font-semibold mb-1">💄 메이크업</h2>
           <ul className="text-left ml-4 leading-6">
-            {Object.entries(rec.makeup).map(([key, value]) => (
+            {Object.entries(rec.makeup as Record<string, string>).map(([key, value]) => (
               <li key={key}>
                 <b>{key}:</b> {value}
               </li>
@@ -112,19 +113,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* 관련 상품 (현재는 더미) */}
-      <div className="mb-8">
-        <h2 className="text-lg text-pink-600 font-semibold mb-2">🛍️ 관련 상품</h2>
-        <div className="flex gap-3 justify-center">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="w-24 h-24 bg-white shadow rounded flex items-center justify-center text-xs">
-              상품명
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 다시 추천받기 버튼 */}
+      {/* 추천 버튼 */}
       <button onClick={getData} disabled={loading} className="mt-4">
         <img
           src="/icons/button.png"
