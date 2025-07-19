@@ -12,13 +12,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // ✅ 스타일 & 착장 & 메이크업 추천을 위한 GPT 프롬프트
     const gptPrompt = `
 너는 감각 있는 여성 스타일 코디 전문가야.
 - 현재 날씨는 "${description}", 기온은 ${temp}도야.
 - 이 조건에 어울리는 스타일 이름을 정하고, 그 스타일에 맞는 착장(outfit)과 메이크업(makeup)을 추천해줘.
 
 [조건]
-- 반드시 JSON 형식으로 응답해. 설명 절대 포함하지 마.
+- 반드시 JSON 형식으로 응답해. 설명은 절대 포함하지 마.
 - 모든 필드는 반드시 채워져 있어야 해.
 - outer는 ${temp > 20 ? "생략 가능" : "반드시 포함"}.
 - makeup 항목은 최소 4개 이상 포함하되 자연스럽고 실용적으로 구성할 것.
@@ -43,12 +44,12 @@ export async function POST(req: Request) {
     "highlighter": "..."
   }
 }
-    `;
+`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: gptPrompt }],
-      temperature: 1.3
+      temperature: 1.3,
     });
 
     const text = completion.choices[0].message.content ?? "";
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
     }
 
-    // ✅ 안전한 픽셀 아바타 프롬프트 생성
+    // ✅ pixelPrompt 생성 (안전하고, 정면 중심 & 귀여운 스타일 반영)
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean)
       .join(", ");
@@ -76,15 +77,13 @@ export async function POST(req: Request) {
       makeup.blusher,
       makeup.foundation,
       makeup.highlighter
-    ]
-      .filter(Boolean)
-      .join(", ");
+    ].filter(Boolean).join(", ");
 
     const pixelPrompt = `
-cute pastel pixel art of a front-facing full-body girl character in ${style} fashion.
+pastel pixel art of a front-facing full-body cute girl character in ${style} style.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
-8-bit sprite, soft details, no background, lovely chibi avatar style, full-body centered.
+8-bit sprite, no background, lovely detailed chibi avatar, centered full-body, inspired by MapleStory and Pokédoll style, soft outlines.
 `.trim();
 
     return NextResponse.json({
