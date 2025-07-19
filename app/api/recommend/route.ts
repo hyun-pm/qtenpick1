@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     "highlighter": "..."
   }
 }
-`;
+    `;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing style/outfit/makeup" }, { status: 400 });
     }
 
-    // 🎨 픽셀 아바타 프롬프트 구성
+    // ✨ 픽셀 캐릭터용 프롬프트 생성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean)
       .join(", ");
@@ -81,8 +81,12 @@ export async function POST(req: Request) {
       .join(", ");
 
     const pixelPrompt = `
-pastel tone pixel art of a cute, full-body female character wearing ${outfitList}, in ${style} style. makeup includes ${makeupList}. 8-bit sprite, no background, lovely detailed avatar style.
-`.trim();
+pastel pixel art of a front-facing, full-body cute female character.
+Wearing: ${outfitList}.
+Style: ${style} fashion.
+Makeup includes: ${makeupList}.
+Lovely detailed 8-bit chibi sprite, no background, inspired by MapleStory and Pokédoll pixel avatar design.
+    `.trim();
 
     return NextResponse.json({
       style,
@@ -90,7 +94,11 @@ pastel tone pixel art of a cute, full-body female character wearing ${outfitList
       makeup,
       pixelPrompt
     });
+
   } catch (error: any) {
-    return NextResponse.json({ error: "GPT API Error", detail: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "GPT API Error", detail: error.message },
+      { status: 500 }
+    );
   }
 }
