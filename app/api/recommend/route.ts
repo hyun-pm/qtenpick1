@@ -12,24 +12,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트: Qoo10 상세페이지 링크 생성 유도
+    // ✅ GPT 프롬프트: 키워드 기반 검색용으로 복구
     const gptPrompt = `
-あなたは日本の女性向けファッションコーディネーターであり、Qoo10 Japanで人気商品にも詳しいです。
+あなたは日本の女性向けファッションコーディネーターです。
 - 今日の天気は「${description}」、気温は${temp}度です。
-- この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで実際に販売されていそうな商品のリンク(products)を3〜5件生成してください。
+- この条件に合うスタイル(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで検索に使えるキーワード配列(keywords)を提案してください。
 
 [出力形式]
-- 有効なJSONオブジェクト1つだけで応答してください。説明文は禁止。
-- 商品(products)は以下の形式で：
-  {
-    "name": "商品名（日本語）",
-    "url": "https://www.qoo10.jp/item/xxxxx"
-  }
-- 実際に存在するURL構造にしてください（例: https://www.qoo10.jp/item/123456789）
-- 特殊記号、広告的な文言、絵文字は禁止。
-- 最後の要素にカンマをつけないでください。
+- 有効なJSONオブジェクト1つのみを返してください。説明は禁止です。
+- keywordsは日本語で、10文字以内の汎用的な単語を最大5件。
+- 広告文や絵文字、特殊文字は禁止です。
 
-[JSON出力例]
+[例]
 {
   "style": "カジュアルガーリー",
   "outfit": {
@@ -46,12 +40,7 @@ export async function POST(req: Request) {
     "eyeshadow": "ブラウンアイシャドウ",
     "highlighter": "ハイライト"
   },
-  "products": [
-    {
-      "name": "ブラウス レディース 春",
-      "url": "https://www.qoo10.jp/item/1163682568"
-    }
-  ]
+  "keywords": ["ブラウス", "スカート", "ティント"]
 }
     `.trim();
 
@@ -83,10 +72,10 @@ export async function POST(req: Request) {
 
     console.log("✅ 파싱된 GPT 응답:", parsed);
 
-    const { style, outfit, makeup, products } = parsed;
+    const { style, outfit, makeup, keywords } = parsed;
 
-    if (!style || !outfit || !makeup || !Array.isArray(products) || products.length === 0) {
-      return NextResponse.json({ error: "Missing style/outfit/makeup/products" }, { status: 400 });
+    if (!style || !outfit || !makeup || !Array.isArray(keywords) || keywords.length === 0) {
+      return NextResponse.json({ error: "Missing style/outfit/makeup/keywords" }, { status: 400 });
     }
 
     // ✅ 픽셀 캐릭터 이미지 프롬프트 생성
@@ -115,8 +104,8 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       outfit,
       makeup,
       pixelPrompt,
-      products,
-      keywords: [], // (이제 사용 안함)
+      keywords,
+      products: [], // ❌ products 제거됨
     });
 
   } catch (error: any) {
