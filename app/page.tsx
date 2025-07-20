@@ -105,18 +105,10 @@ export default function Home() {
         background: 'linear-gradient(to bottom, #FFD5E8, #FFFDED)',
       }}
     >
-      {/* ✅ 그라데이션 + 외곽선 추가 */}
       <h1
         className="text-2xl font-bold mb-4 text-transparent bg-clip-text"
         style={{
           backgroundImage: 'linear-gradient(to right, #FE2C8F, #FE8DD3)',
-          textShadow: `
-            -1px -1px 0 #FFFFFF,
-             1px -1px 0 #FFFFFF,
-            -1px  1px 0 #FFFFFF,
-             1px  1px 0 #FFFFFF,
-             0px  0px 3px #FFFFFF
-          `,
         }}
       >
         🎀 今日のスタイル推薦
@@ -132,7 +124,9 @@ export default function Home() {
       )}
 
       {rec?.style && (
-        <h2 className="text-lg font-bold text-[#FE2C8F] mb-2">スタイル: 「{rec.style}」</h2>
+        <h2 className="text-lg font-bold text-[#FE2C8F] mb-2">
+          スタイル: 「{rec.style}」
+        </h2>
       )}
 
       {loading && <p className="text-center mt-6 text-sm text-gray-500">読み込み中{dots}</p>}
