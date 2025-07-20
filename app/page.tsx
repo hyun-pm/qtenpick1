@@ -11,7 +11,6 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [dots, setDots] = useState('');
 
-  // ✅ 날씨 설명 일본어 번역 맵핑
   const translateWeatherDescription = (desc: string) => {
     const dict: { [key: string]: string } = {
       'clear sky': '快晴',
@@ -100,12 +99,25 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
-      <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 今日のスタイル推薦</h1>
+    <main
+      className="min-h-screen flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]"
+      style={{
+        background: 'linear-gradient(to bottom, #FFD5E8, #FFFDED)',
+      }}
+    >
+      {/* 헤더 텍스트에 핑크 그라데이션 적용 */}
+      <h1
+        className="text-2xl font-bold mb-4 text-transparent bg-clip-text"
+        style={{
+          backgroundImage: 'linear-gradient(to right, #FE2C8F, #FE8DD3)',
+        }}
+      >
+        🎀 今日のスタイル推薦
+      </h1>
 
       {weather && (
         <div className="flex items-center gap-2 mb-4">
-          <Image src={getWeatherIcon(weather.main)} alt="날씨アイコン" width={40} height={40} />
+          <Image src={getWeatherIcon(weather.main)} alt="天気アイコン" width={40} height={40} />
           <span className="text-sm text-gray-800">
             {translateWeatherDescription(weather.description)} / {weather.temp}°C
           </span>
@@ -120,7 +132,7 @@ export default function Home() {
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
-        <img src={pixel} alt="추천 캐릭ター" width={240} height={240} className="mb-4 rounded" />
+        <img src={pixel} alt="おすすめキャラ" width={240} height={240} className="mb-4 rounded" />
       )}
 
       {rec && (
@@ -174,7 +186,7 @@ export default function Home() {
       )}
 
       <button onClick={refresh} className="mt-4">
-        <Image src="/icons/button.png" alt="다시 추천받기" width={120} height={40} />
+        <Image src="/icons/button.png" alt="もう一度" width={120} height={40} />
       </button>
     </main>
   );
