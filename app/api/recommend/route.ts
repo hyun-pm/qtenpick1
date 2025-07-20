@@ -90,7 +90,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ 픽셀 프롬프트 생성
+    // ✅ 픽셀 프롬프트 생성 (1명만 생성되도록 명시 추가)
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean)
       .join(", ");
@@ -105,10 +105,10 @@ export async function POST(req: Request) {
       .join(", ");
 
     const pixelPrompt = `
-pastel pixel art of a full-body front-facing cute Japanese girl character in ${style} style.
+pastel pixel art of a **single**, full-body, front-facing cute Japanese girl character in ${style} style.
 She is wearing ${outfitList}.
 Makeup includes ${makeupList}.
-Centered, chibi proportions, soft outlines.
+Only one character, centered, chibi proportions, soft outlines.
 Modern styling, 8-bit sprite, no background.
 Inspired by MapleStory avatars and You.and.d pixel art.
     `.trim();
@@ -119,7 +119,7 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       makeup,
       pixelPrompt,
       keywords: validKeywords,
-      products: [], // deprecated
+      products: [],
     });
 
   } catch (error: any) {
