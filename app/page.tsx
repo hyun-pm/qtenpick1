@@ -120,26 +120,23 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ Qoo10 검색 결과 페이지 링크 */}
-      {rec?.products && rec.products.length > 0 && (
+      {/* ✅ Qoo10 키워드 기반 검색 결과 페이지 링크 */}
+      {rec?.keywords && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
-          <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
+          <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
           <ul className="list-disc ml-4">
-            {rec.products.map((item: any, index: number) => {
-              const searchUrl = `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(item.name)}`;
-              return (
-                <li key={index}>
-                  <a
-                    href={searchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline hover:text-blue-800"
-                  >
-                    {item.name}
-                  </a>
-                </li>
-              );
-            })}
+            {rec.keywords.map((kw: string, idx: number) => (
+              <li key={idx}>
+                <a
+                  href={`https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(kw)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  「{kw}」 をQoo10で探す
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
       )}
