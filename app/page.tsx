@@ -120,20 +120,17 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ GPT가 추천한 Qoo10 상품 상세페이지 또는 검색 결과 링크 */}
+      {/* ✅ Qoo10 검색 결과 페이지 링크로 연결 */}
       {rec?.products && rec.products.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
           <ul className="list-disc ml-4">
             {rec.products.map((item: any, index: number) => {
-              const safeUrl =
-                item.url?.includes('/item/') && item.url.startsWith('http')
-                  ? item.url
-                  : `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(item.name)}`;
+              const searchUrl = `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(item.name)}`;
               return (
                 <li key={index}>
                   <a
-                    href={safeUrl}
+                    href={searchUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline hover:text-blue-800"
