@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트: 키워드 기반 검색용으로 복구
     const gptPrompt = `
 あなたは日本の女性向けファッションコーディネーターです。
 - 今日の天気は「${description}」、気温は${temp}度です。
@@ -74,13 +73,23 @@ export async function POST(req: Request) {
 
     const { style, outfit, makeup, keywords } = parsed;
 
-    if (!style || !outfit || !makeup || !Array.isArray(keywords) || keywords.length === 0) {
-      return NextResponse.json({ error: "Missing style/outfit/makeup/keywords" }, { status: 400 });
+    // ✅ 키워드 검증 보강
+    const validKeywords = Array.isArray(keywords)
+      ? keywords.filter((kw) =>
+          typeof kw === "string" &&
+          kw.trim().length > 0 &&
+          kw.trim().length <= 20 &&
+          /^[\p{L}\p{N}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー]+$/u.test(kw.trim())
+        )
+      : [];
+
+    if (!style || !outfit || !makeup || validKeywords.length === 0) {
+      return NextResponse.json({ error: "Missing or invalid style/outfit/makeup/keywords" }, { status: 400 });
     }
 
-    // ✅ 픽셀 캐릭터 이미지 프롬프트 생성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
-      .filter(Boolean).join(", ");
+      .filter(Boolean)
+      .join(", ");
 
     const makeupList = [
       makeup.eyeshadow,
@@ -88,7 +97,9 @@ export async function POST(req: Request) {
       makeup.blusher,
       makeup.foundation,
       makeup.highlighter,
-    ].filter(Boolean).join(", ");
+    ]
+      .filter(Boolean)
+      .join(", ");
 
     const pixelPrompt = `
 pastel pixel art of a full-body front-facing cute Japanese girl character in ${style} style.
@@ -104,8 +115,8 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       outfit,
       makeup,
       pixelPrompt,
-      keywords,
-      products: [], // ❌ products 제거됨
+      keywords: validKeywords,
+      products: [],
     });
 
   } catch (error: any) {
