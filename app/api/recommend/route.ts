@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트 (키워드 기반 검색용)
+    // ✅ GPT 프롬프트: Qoo10 검색 키워드 기반 추천
     const gptPrompt = `
 あなたは日本の女性向けファッションコーディネーターです。
 - 今日の天気は「${description}」、気温は${temp}度です。
@@ -70,11 +70,9 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    console.log("✅ 파싱된 GPT 응답:", parsed);
-
     const { style, outfit, makeup, keywords } = parsed;
 
-    // ✅ keywords 검증 (일본어 단어만, 10자 이하, 최대 5개)
+    // ✅ 키워드 검증 보강: 1~20자, 일본어 또는 영숫자
     const validKeywords = Array.isArray(keywords)
       ? keywords.filter(
           (kw) =>
@@ -123,6 +121,7 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       keywords: validKeywords,
       products: [], // deprecated
     });
+
   } catch (error: any) {
     return NextResponse.json(
       { error: "GPT API Error", detail: error.message },
