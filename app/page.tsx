@@ -132,8 +132,11 @@ export default function Home() {
       {loading && <p className="text-center mt-6 text-sm text-gray-500">読み込み中{dots}</p>}
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
+      {/* ✅ 픽셀 프레임 박스로 감싸기 */}
       {!loading && pixel && (
-        <img src={pixel} alt="おすすめキャラ" width={240} height={240} className="mb-4 rounded" />
+        <div className="relative w-[240px] h-[240px] p-1 bg-[#FFFDED] border-4 border-pink-300 rounded-sm shadow-[inset_0_0_0_2px_white] mb-4">
+          <img src={pixel} alt="おすすめキャラ" className="w-full h-full object-contain" />
+        </div>
       )}
 
       {rec && (
