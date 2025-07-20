@@ -105,7 +105,6 @@ export default function Home() {
         background: 'linear-gradient(to bottom, #FFD5E8, #FFFDED)',
       }}
     >
-      {/* 헤더 텍스트에 핑크 그라데이션 적용 */}
       <h1
         className="text-2xl font-bold mb-4 text-transparent bg-clip-text"
         style={{
@@ -125,7 +124,9 @@ export default function Home() {
       )}
 
       {rec?.style && (
-        <h2 className="text-lg font-bold text-pink-600 mb-2">スタイル: 「{rec.style}」</h2>
+        <h2 className="text-lg font-bold text-[#FE2C8F] mb-2">
+          スタイル: 「{rec.style}」
+        </h2>
       )}
 
       {loading && <p className="text-center mt-6 text-sm text-gray-500">読み込み中{dots}</p>}
@@ -137,7 +138,7 @@ export default function Home() {
 
       {rec && (
         <div className="w-full max-w-xs text-sm mb-6">
-          <h3 className="font-semibold text-pink-600 mb-1">👗 コーディネート</h3>
+          <h3 className="font-semibold text-[#FE2C8F] mb-1">👗 コーディネート</h3>
           <ul className="list-disc ml-4">
             {(Object.entries(rec.outfit) as [string, string][])
               .filter(([_, value]) => value)
@@ -148,7 +149,7 @@ export default function Home() {
               ))}
           </ul>
 
-          <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 メイクアップ</h3>
+          <h3 className="font-semibold text-[#FE2C8F] mt-4 mb-1">💄 メイクアップ</h3>
           <ul className="list-disc ml-4">
             {(Object.entries(rec.makeup) as [string, string][])
               .filter(([_, value]) => value)
@@ -163,7 +164,7 @@ export default function Home() {
 
       {Array.isArray(rec?.keywords) && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
-          <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
+          <h3 className="font-semibold text-[#FE2C8F] mb-2">🔍 Qoo10で検索</h3>
           <ul className="list-disc ml-4">
             {rec.keywords.map((kw: string, idx: number) => {
               const safeKeyword = kw?.trim();
