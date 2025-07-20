@@ -122,14 +122,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ 키워드 기반 Qoo10 검색 결과 링크 */}
+      {/* ✅ 키워드 기반 Qoo10 검색 결과 페이지 링크 */}
       {Array.isArray(rec?.keywords) && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
           <ul className="list-disc ml-4">
             {rec.keywords.map((kw: string, idx: number) => {
               const safeKeyword = kw?.trim();
-              const searchUrl = `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(safeKeyword)}`;
+              const searchUrl = `https://www.qoo10.jp/s/${encodeURIComponent(safeKeyword)}?keyword=${encodeURIComponent(safeKeyword)}`;
               return (
                 <li key={idx}>
                   <a
