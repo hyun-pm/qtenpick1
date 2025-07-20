@@ -72,7 +72,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
-      <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 오늘의 스타일 추천</h1>
+      <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 오늘의 스타일推薦</h1>
 
       {weather && (
         <div className="flex items-center gap-2 mb-4">
@@ -84,10 +84,10 @@ export default function Home() {
       )}
 
       {rec?.style && (
-        <h2 className="text-lg font-bold text-pink-600 mb-2">스타일: "{rec.style}"</h2>
+        <h2 className="text-lg font-bold text-pink-600 mb-2">スタイル: 「{rec.style}」</h2>
       )}
 
-      {loading && <p className="text-center mt-6 text-sm text-gray-500">로딩 중...</p>}
+      {loading && <p className="text-center mt-6 text-sm text-gray-500">ローディング中...</p>}
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
@@ -96,7 +96,7 @@ export default function Home() {
 
       {rec && (
         <div className="w-full max-w-xs text-sm mb-6">
-          <h3 className="font-semibold text-pink-600 mb-1">👗 착장</h3>
+          <h3 className="font-semibold text-pink-600 mb-1">👗 コーディネート</h3>
           <ul className="list-disc ml-4">
             {(Object.entries(rec.outfit) as [string, string][])
               .filter(([_, value]) => value)
@@ -120,23 +120,28 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ GPT가 추천한 Qoo10 상품 상세페이지 링크 */}
+      {/* ✅ GPT가 추천한 Qoo10 상품 상세페이지 또는 검색 결과 링크 */}
       {rec?.products && rec.products.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
           <ul className="list-disc ml-4">
-            {rec.products.map((item: any, index: number) => (
-              <li key={index}>
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline hover:text-blue-800"
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
+            {rec.products.map((item: any, index: number) => {
+              const safeUrl = item.url?.startsWith('http')
+                ? item.url
+                : `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(item.name)}`;
+              return (
+                <li key={index}>
+                  <a
+                    href={safeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline hover:text-blue-800"
+                  >
+                    {item.name}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
