@@ -34,16 +34,7 @@ export default function Home() {
         throw new Error('pixelPrompt 누락 - GPT 응답 오류');
       }
 
-      if (Array.isArray(recommendData.keywords) && recommendData.keywords.length > 0) {
-        const productsRes = await fetch('/api/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ keywords: recommendData.keywords }),
-        });
-
-        const productsData = await productsRes.json();
-        recommendData.products = Array.isArray(productsData?.items) ? productsData.items : [];
-      }
+      setRec(recommendData); // 추천 결과 저장
 
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
@@ -57,7 +48,6 @@ export default function Home() {
       }
 
       setPixel(pixelData.image);
-      setRec(recommendData);
     } catch (err: any) {
       console.error(err);
       setError(err.message || '에러 발생');
@@ -117,7 +107,7 @@ export default function Home() {
               ))}
           </ul>
 
-          <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 메이크업</h3>
+          <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 메イクアップ</h3>
           <ul className="list-disc ml-4">
             {(Object.entries(rec.makeup) as [string, string][])
               .filter(([_, value]) => value)
@@ -130,20 +120,20 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ Qoo10 키워드 검색 링크 블록 */}
-      {rec?.keywords && rec.keywords.length > 0 && (
+      {/* ✅ Qoo10 상품 상세페이지 링크 리스트 */}
+      {rec?.products && rec.products.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
-          <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
+          <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
           <ul className="list-disc ml-4">
-            {rec.keywords.map((kw: string, idx: number) => (
-              <li key={idx}>
+            {rec.products.map((item: any, index: number) => (
+              <li key={index}>
                 <a
-                  href={`https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(kw)}`}
+                  href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline hover:text-blue-800"
                 >
-                  「{kw}」 をQoo10で探す
+                  {item.name}
                 </a>
               </li>
             ))}
