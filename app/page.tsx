@@ -34,7 +34,7 @@ export default function Home() {
         throw new Error('pixelPrompt 누락 - GPT 응답 오류');
       }
 
-      setRec(recommendData); // 추천 결과 저장
+      setRec(recommendData);
 
       const pixelRes = await fetch('/api/pixel', {
         method: 'POST',
@@ -107,7 +107,7 @@ export default function Home() {
               ))}
           </ul>
 
-          <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 메イクアップ</h3>
+          <h3 className="font-semibold text-pink-600 mt-4 mb-1">💄 メイクアップ</h3>
           <ul className="list-disc ml-4">
             {(Object.entries(rec.makeup) as [string, string][])
               .filter(([_, value]) => value)
@@ -120,7 +120,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ Qoo10 상품 상세페이지 링크 리스트 */}
+      {/* ✅ GPT가 추천한 Qoo10 상품 상세페이지 링크 */}
       {rec?.products && rec.products.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
