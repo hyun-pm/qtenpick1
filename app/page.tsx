@@ -120,7 +120,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ Qoo10 검색 결과 페이지 링크로 연결 */}
+      {/* ✅ Qoo10 검색 결과 페이지 링크 */}
       {rec?.products && rec.products.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
