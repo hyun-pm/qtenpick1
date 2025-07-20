@@ -12,23 +12,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트 수정: products 배열 생성 유도
+    // ✅ GPT 프롬프트: 실존하는 Qoo10 상품처럼 보이는 상세 링크 생성 유도
     const gptPrompt = `
 あなたは日本の女性向けファッションコーディネーターであり、Qoo10 Japanで人気商品も熟知しています。
 - 今日の天気は「${description}」、気温は${temp}度です。
 - この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで実際に販売されていそうな商品(products)を3〜5件提案してください。
 
 [出力形式]
-- 以下のJSON形式でのみ応答してください。説明文は禁止。
-- 商品(products)は以下の形式で構成してください：
+- JSONオブジェクト1つで応答してください。説明文は禁止。
+- 商品(products)は以下の形式で：
   {
     "name": "商品名（日本語）",
     "url": "https://www.qoo10.jp/item/xxxxx"
   }
-- 特殊文字や広告的な表現は禁止、実在しそうな名前・URLで。
+- 実在しそうな形式にし、広告文や特殊記号は禁止。
 - 最後のカンマは禁止。
 
-[JSON例]
+[JSON出力例]
 {
   "style": "カジュアルガーリー",
   "outfit": {
@@ -88,6 +88,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing style/outfit/makeup/products" }, { status: 400 });
     }
 
+    // ✅ 픽셀 캐릭터 이미지 프롬프트 생성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean).join(", ");
 
@@ -114,7 +115,7 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       makeup,
       pixelPrompt,
       products,
-      keywords: [], // deprecated
+      keywords: [], // deprecated field
     });
 
   } catch (error: any) {
