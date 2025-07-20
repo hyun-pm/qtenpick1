@@ -12,6 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    // ✅ GPT 프롬프트 (키워드 기반 검색용)
     const gptPrompt = `
 あなたは日本の女性向けファッションコーディネーターです。
 - 今日の天気は「${description}」、気温は${temp}度です。
@@ -73,24 +74,28 @@ export async function POST(req: Request) {
 
     const { style, outfit, makeup, keywords } = parsed;
 
-    // ✅ 키워드 검증 보강
+    // ✅ keywords 검증 (일본어 단어만, 10자 이하, 최대 5개)
     const validKeywords = Array.isArray(keywords)
-      ? keywords.filter((kw) =>
-          typeof kw === "string" &&
-          kw.trim().length > 0 &&
-          kw.trim().length <= 20 &&
-          /^[\p{L}\p{N}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー]+$/u.test(kw.trim())
+      ? keywords.filter(
+          (kw) =>
+            typeof kw === "string" &&
+            kw.trim().length > 0 &&
+            kw.trim().length <= 20 &&
+            /^[\p{L}\p{N}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー]+$/u.test(kw.trim())
         )
       : [];
 
     if (!style || !outfit || !makeup || validKeywords.length === 0) {
-      return NextResponse.json({ error: "Missing or invalid style/outfit/makeup/keywords" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing or invalid style/outfit/makeup/keywords" },
+        { status: 400 }
+      );
     }
 
+    // ✅ 픽셀 프롬프트 생성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean)
       .join(", ");
-
     const makeupList = [
       makeup.eyeshadow,
       makeup.lip,
@@ -116,9 +121,8 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       makeup,
       pixelPrompt,
       keywords: validKeywords,
-      products: [],
+      products: [], // deprecated
     });
-
   } catch (error: any) {
     return NextResponse.json(
       { error: "GPT API Error", detail: error.message },
