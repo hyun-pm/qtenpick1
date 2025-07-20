@@ -126,9 +126,10 @@ export default function Home() {
           <h3 className="font-semibold text-pink-600 mb-2">🛍️ Qoo10おすすめ商品</h3>
           <ul className="list-disc ml-4">
             {rec.products.map((item: any, index: number) => {
-              const safeUrl = item.url?.startsWith('http')
-                ? item.url
-                : `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(item.name)}`;
+              const safeUrl =
+                item.url?.includes('/item/') && item.url.startsWith('http')
+                  ? item.url
+                  : `https://www.qoo10.jp/gmkt.inc/Search/Search.aspx?keyword=${encodeURIComponent(item.name)}`;
               return (
                 <li key={index}>
                   <a
