@@ -9,7 +9,25 @@ export default function Home() {
   const [pixel, setPixel] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dots, setDots] = useState(''); // ✅ 점 애니메이션용 상태
+  const [dots, setDots] = useState('');
+
+  // ✅ 날씨 설명 일본어 번역 맵핑
+  const translateWeatherDescription = (desc: string) => {
+    const dict: { [key: string]: string } = {
+      'clear sky': '快晴',
+      'few clouds': '晴れ時々曇り',
+      'scattered clouds': '曇りがち',
+      'broken clouds': '曇り',
+      'overcast clouds': '曇り',
+      'shower rain': 'にわか雨',
+      'light rain': '小雨',
+      'rain': '雨',
+      'thunderstorm': '雷雨',
+      'snow': '雪',
+      'mist': '霧',
+    };
+    return dict[desc?.toLowerCase()] || desc;
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -47,7 +65,7 @@ export default function Home() {
 
       const pixelData = await pixelRes.json();
       if (!pixelData.image) {
-        throw new Error('픽셀 이미지 생성 실패');
+        throw new Error('픽셀 이미지生成失敗');
       }
 
       setPixel(pixelData.image);
@@ -63,7 +81,6 @@ export default function Home() {
     fetchAll();
   }, []);
 
-  // ✅ 점 애니메이션: 로딩중...
   useEffect(() => {
     if (!loading) return;
     const interval = setInterval(() => {
@@ -84,14 +101,13 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
-      {/* ✅ 제목 일본어로 변경 */}
       <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 今日のスタイル推薦</h1>
 
       {weather && (
         <div className="flex items-center gap-2 mb-4">
-          <Image src={getWeatherIcon(weather.main)} alt="날씨 아이콘" width={40} height={40} />
+          <Image src={getWeatherIcon(weather.main)} alt="날씨アイコン" width={40} height={40} />
           <span className="text-sm text-gray-800">
-            {weather.description} / {weather.temp}°C
+            {translateWeatherDescription(weather.description)} / {weather.temp}°C
           </span>
         </div>
       )}
@@ -100,13 +116,11 @@ export default function Home() {
         <h2 className="text-lg font-bold text-pink-600 mb-2">スタイル: 「{rec.style}」</h2>
       )}
 
-      {/* ✅ 로딩중... 점 애니메이션 적용 */}
       {loading && <p className="text-center mt-6 text-sm text-gray-500">読み込み中{dots}</p>}
-
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
-        <img src={pixel} alt="추천 캐릭터" width={240} height={240} className="mb-4 rounded" />
+        <img src={pixel} alt="추천 캐릭ター" width={240} height={240} className="mb-4 rounded" />
       )}
 
       {rec && (
@@ -135,7 +149,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ Qoo10 검색 결과 링크 수정 (/s/keyword?keyword=keyword) */}
       {Array.isArray(rec?.keywords) && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
