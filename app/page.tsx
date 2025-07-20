@@ -13,6 +13,8 @@ export default function Home() {
   const fetchAll = async () => {
     setLoading(true);
     setError(null);
+    setPixel('');       // ✅ 이전 픽셀 이미지 제거
+    setRec(null);       // ✅ 이전 추천 데이터 제거
 
     try {
       const weatherRes = await fetch('/api/weather');
@@ -121,7 +123,7 @@ export default function Home() {
       )}
 
       {/* ✅ Qoo10 키워드 기반 검색 결과 페이지 링크 */}
-      {rec?.keywords && rec.keywords.length > 0 && (
+      {Array.isArray(rec?.keywords) && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
           <ul className="list-disc ml-4">
