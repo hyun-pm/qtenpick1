@@ -9,6 +9,7 @@ export default function Home() {
   const [pixel, setPixel] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dots, setDots] = useState(''); // ✅ 점 애니메이션용 상태
 
   const fetchAll = async () => {
     setLoading(true);
@@ -52,7 +53,7 @@ export default function Home() {
       setPixel(pixelData.image);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || '에러 발생');
+      setError(err.message || 'エラーが発生しました');
     } finally {
       setLoading(false);
     }
@@ -61,6 +62,15 @@ export default function Home() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  // ✅ 점 애니메이션: 로딩중...
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => {
+      setDots((prev) => (prev.length >= 3 ? '' : prev + '.'));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const refresh = () => {
     fetchAll();
@@ -74,7 +84,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-pink-100 flex flex-col items-center justify-start px-4 py-8 font-[Galmuri]">
-      <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 오늘의 스타일推薦</h1>
+      {/* ✅ 제목 일본어로 변경 */}
+      <h1 className="text-2xl font-bold mb-4 text-pink-700">🎀 今日のスタイル推薦</h1>
 
       {weather && (
         <div className="flex items-center gap-2 mb-4">
@@ -89,7 +100,9 @@ export default function Home() {
         <h2 className="text-lg font-bold text-pink-600 mb-2">スタイル: 「{rec.style}」</h2>
       )}
 
-      {loading && <p className="text-center mt-6 text-sm text-gray-500">ローディング中...</p>}
+      {/* ✅ 로딩중... 점 애니메이션 적용 */}
+      {loading && <p className="text-center mt-6 text-sm text-gray-500">読み込み中{dots}</p>}
+
       {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
 
       {!loading && pixel && (
@@ -122,7 +135,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ✅ 키워드 기반 Qoo10 검색 결과 페이지 링크 */}
+      {/* ✅ Qoo10 검색 결과 링크 수정 (/s/keyword?keyword=keyword) */}
       {Array.isArray(rec?.keywords) && rec.keywords.length > 0 && (
         <div className="w-full max-w-xs text-sm mb-8">
           <h3 className="font-semibold text-pink-600 mb-2">🔍 Qoo10で検索</h3>
