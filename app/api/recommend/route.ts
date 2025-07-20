@@ -12,29 +12,53 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ 일본어 키워드 포함 프롬프트
+    // ✅ GPT 프롬프트 수정: products 배열 생성 유도
     const gptPrompt = `
-あなたはセンスのある日本の女性向けファッションコーディネーターです。
+あなたは日本の女性向けファッションコーディネーターであり、Qoo10 Japanで人気商品も熟知しています。
 - 今日の天気は「${description}」、気温は${temp}度です。
-- この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで検索に使えるキーワード配列(keywords)を提案してください。
+- この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで実際に販売されていそうな商品(products)を3〜5件提案してください。
 
-[出力条件]
-- 有効なJSONオブジェクト1つだけを応答してください。説明や文章は禁止。
-- すべてのキーと値はダブルクォーテーションで囲んでください。
-- 最後の要素の後にカンマを入れないでください。
-- キーワードは必ず**日本語**で、5〜10文字以内で最大5個まで生成してください。
-- 存在しない単語、広告文、特殊文字を含めないこと。
-- 例：「ブラウス」「スカート」「スニーカー」「リップ」「カーディガン」
+[出力形式]
+- 以下のJSON形式でのみ応答してください。説明文は禁止。
+- 商品(products)は以下の形式で構成してください：
+  {
+    "name": "商品名（日本語）",
+    "url": "https://www.qoo10.jp/item/xxxxx"
+  }
+- 特殊文字や広告的な表現は禁止、実在しそうな名前・URLで。
+- 最後のカンマは禁止。
 
-[JSON出力例]
-{"style":"ガーリー","outfit":{"top":"白ブラウス","bottom":"花柄スカート","shoes":"パンプス","accessory":"リボンヘアピン","outer":"カーディガン"},"makeup":{"foundation":"ツヤ肌クッション","blusher":"ピンクチーク","lip":"ティントリップ","eyeshadow":"コーラルシャドウ","highlighter":"ハイライト"},"keywords":["ブラウス","スカート","リップ"]}
+[JSON例]
+{
+  "style": "カジュアルガーリー",
+  "outfit": {
+    "top": "白いブラウス",
+    "bottom": "チェック柄スカート",
+    "shoes": "ローファー",
+    "accessory": "パールイヤリング",
+    "outer": "ライトカーディガン"
+  },
+  "makeup": {
+    "foundation": "ナチュラルクッションファンデ",
+    "blusher": "ピンクチーク",
+    "lip": "水光ティント",
+    "eyeshadow": "ブラウンアイシャドウ",
+    "highlighter": "ハイライト"
+  },
+  "products": [
+    {
+      "name": "ブラウス レディース 春",
+      "url": "https://www.qoo10.jp/item/12345678"
+    }
+  ]
+}
     `.trim();
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: gptPrompt }],
       temperature: 1.1,
-      max_tokens: 500,
+      max_tokens: 600,
     });
 
     const text = completion.choices[0].message.content ?? "";
@@ -58,13 +82,12 @@ export async function POST(req: Request) {
 
     console.log("✅ 파싱된 GPT 응답:", parsed);
 
-    const { style, outfit, makeup, keywords } = parsed;
+    const { style, outfit, makeup, products } = parsed;
 
-    if (!style || !outfit || !makeup || !Array.isArray(keywords) || keywords.length === 0) {
-      return NextResponse.json({ error: "Missing style/outfit/makeup/keywords" }, { status: 400 });
+    if (!style || !outfit || !makeup || !Array.isArray(products) || products.length === 0) {
+      return NextResponse.json({ error: "Missing style/outfit/makeup/products" }, { status: 400 });
     }
 
-    // ✅ 픽셀 캐릭터 이미지용 프롬프트 생성
     const outfitList = [outfit.top, outfit.bottom, outfit.shoes, outfit.accessory, outfit.outer]
       .filter(Boolean).join(", ");
 
@@ -90,8 +113,8 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       outfit,
       makeup,
       pixelPrompt,
-      products: [], // 상품 직접 생성 안하므로 빈 배열 유지
-      keywords,
+      products,
+      keywords: [], // deprecated
     });
 
   } catch (error: any) {
