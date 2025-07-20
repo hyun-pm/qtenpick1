@@ -12,21 +12,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // ✅ GPT 프롬프트: 실존하는 Qoo10 상품처럼 보이는 상세 링크 생성 유도
+    // ✅ GPT 프롬프트: Qoo10 상세페이지 링크 생성 유도
     const gptPrompt = `
-あなたは日本の女性向けファッションコーディネーターであり、Qoo10 Japanで人気商品も熟知しています。
+あなたは日本の女性向けファッションコーディネーターであり、Qoo10 Japanで人気商品にも詳しいです。
 - 今日の天気は「${description}」、気温は${temp}度です。
-- この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで実際に販売されていそうな商品(products)を3〜5件提案してください。
+- この条件に合うスタイル名(style)、コーディネート(outfit)、メイクアップ(makeup)、そしてQoo10 Japanで実際に販売されていそうな商品のリンク(products)を3〜5件生成してください。
 
 [出力形式]
-- JSONオブジェクト1つで応答してください。説明文は禁止。
+- 有効なJSONオブジェクト1つだけで応答してください。説明文は禁止。
 - 商品(products)は以下の形式で：
   {
     "name": "商品名（日本語）",
     "url": "https://www.qoo10.jp/item/xxxxx"
   }
-- 実在しそうな形式にし、広告文や特殊記号は禁止。
-- 最後のカンマは禁止。
+- 実際に存在するURL構造にしてください（例: https://www.qoo10.jp/item/123456789）
+- 特殊記号、広告的な文言、絵文字は禁止。
+- 最後の要素にカンマをつけないでください。
 
 [JSON出力例]
 {
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
   "products": [
     {
       "name": "ブラウス レディース 春",
-      "url": "https://www.qoo10.jp/item/12345678"
+      "url": "https://www.qoo10.jp/item/1163682568"
     }
   ]
 }
@@ -115,7 +116,7 @@ Inspired by MapleStory avatars and You.and.d pixel art.
       makeup,
       pixelPrompt,
       products,
-      keywords: [], // deprecated field
+      keywords: [], // (이제 사용 안함)
     });
 
   } catch (error: any) {
